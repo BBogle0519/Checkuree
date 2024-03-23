@@ -5,7 +5,10 @@ class ApiService {
 
   static Dio _initializeDio() {
     Dio dio = Dio(BaseOptions(baseUrl: 'https://checkuree.com'));
-    dio.interceptors.add(LogInterceptor(requestBody: true, responseBody: true));
+    dio.interceptors.add(LogInterceptor(
+      requestBody: true,
+      responseBody: true,
+    ));
 
     return dio;
   }

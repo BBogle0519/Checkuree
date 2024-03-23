@@ -1,28 +1,36 @@
 class SignInResponse {
   final bool success;
   final String message;
-  final AccessTokenData data;
+  final TokenData data;
 
-  SignInResponse(
-      {required this.success, required this.message, required this.data});
+  SignInResponse({
+    required this.success,
+    required this.message,
+    required this.data,
+  });
 
   factory SignInResponse.fromJson(Map<String, dynamic> json) {
     return SignInResponse(
-      success: json['success'],
-      message: json['message'],
-      data: AccessTokenData.fromJson(json['data']),
+      success: json['success'] as bool,
+      message: json['message'] as String,
+      data: TokenData.fromJson(json['data']),
     );
   }
 }
 
-class AccessTokenData {
+class TokenData {
   final String accessToken;
+  final String refreshToken;
 
-  AccessTokenData({required this.accessToken});
+  TokenData({
+    required this.accessToken,
+    required this.refreshToken,
+  });
 
-  factory AccessTokenData.fromJson(Map<String, dynamic> json) {
-    return AccessTokenData(
-      accessToken: json['accessToken'],
+  factory TokenData.fromJson(Map<String, dynamic> json) {
+    return TokenData(
+      accessToken: json['accessToken'] as String,
+      refreshToken: json['refreshToken'] as String,
     );
   }
 }

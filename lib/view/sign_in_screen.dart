@@ -17,7 +17,8 @@ class _SignInScreenState extends State<SignInScreen> {
   final TextEditingController _pwController = TextEditingController();
   final SignInViewModel _viewModel = SignInViewModel();
   late SharedPreferences _prefs;
-  late String token;
+  late String accessToken;
+  late String refreshToken;
 
   void _login(BuildContext context) async {
     _prefs = await SharedPreferences.getInstance();
@@ -25,15 +26,23 @@ class _SignInScreenState extends State<SignInScreen> {
     String pw = _pwController.text;
 
     // print("id: $id, pw: $pw");
-    SignInResponse response = await _viewModel.signInPost(id, pw);
-    // print("response :::: $response");
-    token = response.data.accessToken;
+    SignInResponse response = await _viewModel.signInPost(
+      id,
+      pw,
+    );
+    accessToken = response.data.accessToken;
+    refreshToken = response.data.refreshToken;
+
     saveData();
   }
 
   // 토큰 저장
   Future<void> saveData() async {
-    _prefs.setString('accessToken', token);
+
+    // print("access: $accessToken");
+    // print("refresh: $refreshToken");
+    _prefs.setString('accessToken', accessToken);
+    _prefs.setString('refreshToken', refreshToken);
   }
 
   // 토큰 로드
@@ -102,7 +111,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const signUpScreen(),
+                        builder: (context) => const SignUpScreen(),
                       ),
                     );
                   },
