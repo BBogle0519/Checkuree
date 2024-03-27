@@ -6,14 +6,22 @@ import '../model/sign_up_response.dart';
 class SignUpViewModel {
   final Dio dio = Dio();
 
-  Future<SignUpResponse> signUpPost(String username, String password,
-      String name, String mobileNumber, String birthday, String email) async {
+  Future<SignUpResponse> signUpPost(
+    String username,
+    String password,
+    String name,
+    String mobileNumber,
+    int birthYear,
+    String birthday,
+    String email,
+  ) async {
     try {
       Response response = await ApiService.dio.post('/auth/signup', data: {
         'username': username,
         'password': password,
         'name': name,
         'mobileNumber': mobileNumber,
+        'birthYear': birthYear,
         'birthday': birthday,
         'email': email,
       });
