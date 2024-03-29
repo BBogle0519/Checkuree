@@ -1,20 +1,21 @@
 class AttendanceListResponse {
-  int count;
-  List<Items> items;
+  int? count;
+  List<Items>? items;
   bool success;
 
   AttendanceListResponse({
-    required this.count,
-    required this.items,
+    this.count,
+    this.items,
     required this.success,
   });
 
   factory AttendanceListResponse.fromJson(Map<String, dynamic> json) {
     return AttendanceListResponse(
-      count: json['count'] as int,
-      items: (json['items'] as List)
-          .map((itemJson) => Items.fromJson(itemJson))
-          .toList(),
+      count: (json['count'] as int?) ?? 0,
+      items: (json['items'] as List<dynamic>?)
+              ?.map((itemJson) => Items.fromJson(itemJson))
+              .toList() ??
+          [],
       success: json['success'] as bool,
     );
   }

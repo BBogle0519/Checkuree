@@ -1,19 +1,21 @@
 class SignUpResponse {
   final bool success;
   final String message;
-  final UserInfo data;
+  final UserInfo? data;
 
   SignUpResponse({
     required this.success,
     required this.message,
-    required this.data,
+    this.data,
   });
 
-  factory SignUpResponse.fromJson(Map<String?, dynamic> json) {
+  factory SignUpResponse.fromJson(Map<String, dynamic> json) {
     return SignUpResponse(
       success: json['success'] as bool,
-      message: json['message'],
-      data: UserInfo.fromJson(json['data']),
+      message: (json['message'] as String?) ?? "null",
+      data: json['data'] != null
+          ? UserInfo.fromJson(json['data'] as Map<String, dynamic>)
+          : UserInfo.empty(),
     );
   }
 }
@@ -64,6 +66,24 @@ class UserInfo {
       refreshToken: json['refreshToken'],
       id: json['id'],
       type: json['type'],
+    );
+  }
+
+  static UserInfo empty() {
+    return UserInfo(
+      username: "",
+      name: "",
+      mobileNumber: "",
+      email: "",
+      birthday: "",
+      createId: null,
+      createAt: null,
+      updateId: null,
+      updateAt: null,
+      deletedAt: null,
+      refreshToken: null,
+      id: "",
+      type: "",
     );
   }
 }

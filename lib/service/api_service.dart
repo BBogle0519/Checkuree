@@ -9,6 +9,7 @@ late String refreshToken;
 
 class ApiService {
   static final Dio dio = _initializeDio();
+  static Function? onTokenRefreshFailed;
 
   static Dio _initializeDio() {
     Dio dio = Dio(BaseOptions(baseUrl: 'https://checkuree.com'));
@@ -22,42 +23,55 @@ class ApiService {
       onRequest: (options, handler) async {
         await _loadData();
 
-        accessToken = _prefs.getString('accessToken') ?? "null";
-        print("accessToken load ::::: $accessToken");
-
-        String? token = accessToken;
-        options.headers['Authorization'] = 'Bearer $token';
-        print("Bearer token ::: Bearer $token");
+        options.headers['Authorization'] = 'Bearer $accessToken';
 
         return handler.next(options);
       },
 
       // Token expiration handling
-      onError: (e, handler) async {
+      onError: (DioException e, handler) async {
         if (e.response?.statusCode == 401) {
+          int retryCount = e.requestOptions.extra["retryCount"] ?? 0;
+
+          if (retryCount >= 1) {
+            print("토큰 갱신 후 에도 실패");
+            onTokenRefreshFailed?.call();
+            return handler.reject(e);
+          }
+
           print("ApiService: token reset");
-          refreshToken = _prefs.getString('refreshToken')!;
-          Response response = await ApiService.dio.post(
-            '/auth/refresh-token',
-            data: {
-              'refreshToken': refreshToken,
-            },
-          );
-          if (response.statusCode == 200) {
+          await _loadData();
+          try {
+            Response response = await ApiService.dio.post(
+              '/auth/refresh-token',
+              data: {
+                'refreshToken': refreshToken,
+              },
+            );
             accessToken =
                 SignInResponse.fromJson(response.data).data!.accessToken!;
             refreshToken =
                 SignInResponse.fromJson(response.data).data!.refreshToken!;
+            print("ApiService: 재요청 후 saveData");
             await _saveData();
 
             e.requestOptions.headers['Authorization'] = 'Bearer $accessToken';
-            return handler.resolve(await dio.request(
-              e.requestOptions.path,
-              options: e.requestOptions as Options,
-            ));
+            e.requestOptions.extra["retryCount"] = retryCount + 1;
+            return handler.resolve(await dio.fetch(e.requestOptions));
+          } on DioException catch (e) {
+            final response = e.response;
+
+            if (response != null) {
+              print(response.data);
+              print("header:: ${response.headers}");
+              print("requestOptions:: ${response.requestOptions}");
+            } else {
+              print(e.requestOptions);
+              print(e.message);
+              throw Exception('Failed to load post: $e');
+            }
           }
         }
-
         return handler.reject(e);
       },
     ));
@@ -73,15 +87,16 @@ class ApiService {
   static Future<void> _loadData() async {
     _prefs = await SharedPreferences.getInstance();
     accessToken = _prefs.getString('accessToken') ?? "null";
-    // print("accessToken load ::::: $accessToken");
+    refreshToken = _prefs.getString('refreshToken') ?? "null";
+    // print("apiservice accessToken load ::::: $accessToken");
   }
 
   // 토큰 저장
   static Future<void> _saveData() async {
-    // print("access: $accessToken");
-    // print("refresh: $refreshToken");
+    // print("apiservice access save: $accessToken");
+    // print("apiservice refresh save: $refreshToken");
     _prefs = await SharedPreferences.getInstance();
-    refreshToken = _prefs.getString('refreshToken') ?? "null";
+    // refreshToken = _prefs.getString('refreshToken') ?? "null";
 
     _prefs.setString('accessToken', accessToken);
     _prefs.setString('refreshToken', refreshToken);

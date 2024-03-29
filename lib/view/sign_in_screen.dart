@@ -129,7 +129,7 @@ class _SignInScreenState extends State<SignInScreen> {
                       if (_formKey.currentState?.validate() ?? false) {
                         bool loginStatus = await _login(context);
                         if (loginStatus) {
-                          // Navigator.pop(context);
+                          Navigator.pop(context);
                           Navigator.push(
                             context,
                             MaterialPageRoute(
