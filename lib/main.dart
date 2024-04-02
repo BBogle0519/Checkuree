@@ -1,8 +1,11 @@
 import 'package:checkuuree/service/api_service.dart';
 import 'package:checkuuree/view/sign_in_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 void main() {
+  initializeDateFormatting('ko_KR', null).then((_) => runApp(const MyApp()));
+
   ApiService.onTokenRefreshFailed = () {
     MyApp._navigatorKey.currentState?.pushReplacement(
       MaterialPageRoute(

@@ -1,5 +1,6 @@
 import 'package:checkuuree/model/sign_in_response.dart';
-import 'package:checkuuree/view/main_screen.dart';
+import 'package:checkuuree/view/attendance_check_screen.dart';
+import 'package:checkuuree/view/attendance_list_screen.dart';
 import 'package:checkuuree/view/sign_up_screen.dart';
 import 'package:checkuuree/view_model/sign_in_view_model.dart';
 import 'package:flutter/material.dart';
@@ -133,7 +134,8 @@ class _SignInScreenState extends State<SignInScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const MainScreen(),
+                              builder: (context) =>
+                                  const AttendanceListScreen(),
                             ),
                           );
                         } else {

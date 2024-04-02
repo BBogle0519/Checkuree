@@ -2,14 +2,14 @@ import 'package:checkuuree/model/attendance_list_response.dart';
 import 'package:checkuuree/view_model/attendance_list_view_model.dart';
 import 'package:flutter/material.dart';
 
-class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
+class AttendanceCheckScreen extends StatefulWidget {
+  const AttendanceCheckScreen({super.key});
 
   @override
-  State<MainScreen> createState() => _MainScreenState();
+  State<AttendanceCheckScreen> createState() => _AttendanceCheckScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> {
+class _AttendanceCheckScreenState extends State<AttendanceCheckScreen> {
   final _formKey = GlobalKey<FormState>();
   final AttendanceListViewModel _viewModel = AttendanceListViewModel();
   late List<Items> data = [];
@@ -81,21 +81,19 @@ class _MainScreenState extends State<MainScreen> {
                     Expanded(
                       child: data.isNotEmpty
                           ? ListView.builder(
-                        itemCount: data.length,
-                        itemBuilder: (context, index) {
-                          return ListTile(
-                            title: Text(
-                                'title $index, ${data[index].attendance
-                                    .title}'),
-                            subtitle: Text(
-                                'description $index, ${data[index].attendance
-                                    .description}'),
-                          );
-                        },
-                      )
+                              itemCount: data.length,
+                              itemBuilder: (context, index) {
+                                return ListTile(
+                                  title: Text(
+                                      'title $index, ${data[index].attendance.title}'),
+                                  subtitle: Text(
+                                      'description $index, ${data[index].attendance.description}'),
+                                );
+                              },
+                            )
                           : const Center(
-                        child: Text('데이터 없음.'),
-                      ),
+                              child: Text('데이터 없음.'),
+                            ),
                     ),
                   ],
                 ),
@@ -107,46 +105,45 @@ class _MainScreenState extends State<MainScreen> {
               bottom: 30,
               child: _showBottomSheet
                   ? BottomSheet(
-                onClosing: () {}, // 필요에 따라 구현
-                builder: (context) =>
-                    Container(
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF054302),
-                        borderRadius: BorderRadius.all(Radius.circular(30)),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            IconButton(
-                              icon: const Icon(
-                                Icons.home,
-                                color: Colors.white,
+                      onClosing: () {}, // 필요에 따라 구현
+                      builder: (context) => Container(
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF054302),
+                          borderRadius: BorderRadius.all(Radius.circular(30)),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.home,
+                                  color: Colors.white,
+                                ),
+                                onPressed: () {
+                                  test();
+                                },
                               ),
-                              onPressed: () {
-                                test();
-                              },
-                            ),
-                            IconButton(
-                              icon: const Icon(
-                                Icons.search,
-                                color: Colors.white,
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.search,
+                                  color: Colors.white,
+                                ),
+                                onPressed: () {},
                               ),
-                              onPressed: () {},
-                            ),
-                            IconButton(
-                              icon: const Icon(
-                                Icons.person,
-                                color: Colors.white,
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.person,
+                                  color: Colors.white,
+                                ),
+                                onPressed: () {},
                               ),
-                              onPressed: () {},
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-              )
+                    )
                   : const SizedBox(),
             ),
           ],
