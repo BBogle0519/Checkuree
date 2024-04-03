@@ -1,9 +1,16 @@
-import 'package:checkuuree/model/attendance_list_response.dart';
-import 'package:checkuuree/view_model/attendance_list_view_model.dart';
+import 'package:checkuuree/model/attendance_check_response.dart'
+    as check_response;
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+
+import '../view_model/attendance_check_view_model.dart';
 
 class AttendanceCheckScreen extends StatefulWidget {
-  const AttendanceCheckScreen({super.key});
+  //이전 화면에서 전달받은 데이터
+  final String attendanceId;
+
+  const AttendanceCheckScreen({super.key, required this.attendanceId});
 
   @override
   State<AttendanceCheckScreen> createState() => _AttendanceCheckScreenState();
@@ -11,41 +18,50 @@ class AttendanceCheckScreen extends StatefulWidget {
 
 class _AttendanceCheckScreenState extends State<AttendanceCheckScreen> {
   final _formKey = GlobalKey<FormState>();
-  final AttendanceListViewModel _viewModel = AttendanceListViewModel();
-  late List<Items> data = [];
+  final AttendanceCheckViewModel _viewModel = AttendanceCheckViewModel();
+  late List<check_response.Items> data = [];
   bool _showBottomSheet = true;
+  DateTime currentDate = DateTime.now();
+  final daysInMonth = DateUtils.getDaysInMonth;
 
   @override
   void initState() {
     super.initState();
-    _loadAttendanceList();
+    _loadAttendeesList();
   }
 
-  Future<void> _loadAttendanceList() async {
-    bool success = await _attendanceListGet(context);
+  Future<void> _loadAttendeesList() async {
+    bool success = await _attendeesListGet(context);
     if (success) {
       setState(() {});
     }
   }
 
-  Future<bool> _attendanceListGet(BuildContext context) async {
-    AttendanceListResponse response = await _viewModel.attendanceListGet();
+  Future<bool> _attendeesListGet(BuildContext context) async {
+    check_response.AttendanceCheckResponse response =
+        await _viewModel.attendeesListGet(widget.attendanceId);
     if (response.success) {
       data = response.items!;
     }
     return response.success;
   }
 
-  Future<bool> test() async {
-    AttendanceListResponse response = await _viewModel.attendanceListGet();
-    if (response.success) {
-      data = response.items!;
-    }
-    return response.success;
+  void _incrementDay() {
+    setState(() {
+      currentDate = currentDate.add(const Duration(days: 1));
+    });
+  }
+
+  void _decrementDay() {
+    setState(() {
+      currentDate = currentDate.subtract(const Duration(days: 1));
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    String weekday = DateFormat('EE', 'ko').format(currentDate);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("출석부 목록(메인)"),
@@ -74,9 +90,85 @@ class _AttendanceCheckScreenState extends State<AttendanceCheckScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      "학원 이름",
-                      style: TextStyle(fontSize: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Expanded(
+                          child: Text(
+                            "출석부 이름",
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.chevron_left),
+                              onPressed: _decrementDay,
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 2.0,
+                                vertical: 2.0,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.grey,
+                                borderRadius: BorderRadius.circular(2.0),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 2.0),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(2.0),
+                                    ),
+                                    child: Text(
+                                      currentDate.month
+                                          .toString()
+                                          .padLeft(2, '0'),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 2),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 2.0),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(2.0),
+                                    ),
+                                    child: Text(
+                                      currentDate.day
+                                          .toString()
+                                          .padLeft(2, '0'),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 2),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 2.0),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(2.0),
+                                    ),
+                                    child: Text(weekday),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.chevron_right),
+                              onPressed: _incrementDay,
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                     Expanded(
                       child: data.isNotEmpty
@@ -84,10 +176,10 @@ class _AttendanceCheckScreenState extends State<AttendanceCheckScreen> {
                               itemCount: data.length,
                               itemBuilder: (context, index) {
                                 return ListTile(
-                                  title: Text(
-                                      'title $index, ${data[index].attendance.title}'),
-                                  subtitle: Text(
-                                      'description $index, ${data[index].attendance.description}'),
+                                  title:
+                                      Text('name $index : ${data[index].name}'),
+                                  subtitle:
+                                      Text('age $index : ${data[index].age}'),
                                 );
                               },
                             )
@@ -121,9 +213,7 @@ class _AttendanceCheckScreenState extends State<AttendanceCheckScreen> {
                                   Icons.home,
                                   color: Colors.white,
                                 ),
-                                onPressed: () {
-                                  test();
-                                },
+                                onPressed: () {},
                               ),
                               IconButton(
                                 icon: const Icon(

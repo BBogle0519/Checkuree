@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../utils/show_toast.dart';
+
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
 
@@ -41,24 +43,6 @@ class _SignInScreenState extends State<SignInScreen> {
       saveData();
     }
     return response.success;
-  }
-
-  void showToast() {
-    Fluttertoast.showToast(
-        msg: "ID 또는 PW가 정확하지 않습니다.",
-        //메세지입력
-        toastLength: Toast.LENGTH_SHORT,
-        //메세지를 보여주는 시간(길이)
-        gravity: ToastGravity.CENTER,
-        //위치지정
-        timeInSecForIosWeb: 1,
-        //ios및 웹용 시간
-        backgroundColor: Colors.black,
-        //배경색
-        textColor: Colors.white,
-        //글자색
-        fontSize: 16.0 //폰트 사이즈
-        );
   }
 
   // 토큰 저장
@@ -139,11 +123,11 @@ class _SignInScreenState extends State<SignInScreen> {
                             ),
                           );
                         } else {
-                          showToast();
+                          showToast("ID 또는 PW가 정확하지 않습니다.");
                         }
                       } else {
                         // print("폼 비정상임");
-                        showToast();
+                        showToast("ID 또는 PW가 정확하지 않습니다.");
                       }
                     },
                     child: const Text("로그인"),

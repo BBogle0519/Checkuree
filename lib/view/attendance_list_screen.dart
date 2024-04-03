@@ -1,4 +1,6 @@
-import 'package:checkuuree/model/attendance_list_response.dart';
+import 'package:checkuuree/model/attendance_list_response.dart' as list_response;
+import 'package:checkuuree/view/attendance_add_screen.dart';
+import 'package:checkuuree/view/attendance_check_screen.dart';
 import 'package:checkuuree/view_model/attendance_list_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -13,7 +15,7 @@ class AttendanceListScreen extends StatefulWidget {
 class _AttendanceListScreenState extends State<AttendanceListScreen> {
   final _formKey = GlobalKey<FormState>();
   final AttendanceListViewModel _viewModel = AttendanceListViewModel();
-  List<Items> data = [];
+  List<list_response.Items> data = [];
   final DateTime now = DateTime.now();
   late final String formattedDate;
   late final String date;
@@ -38,7 +40,7 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
   }
 
   Future<bool> _attendanceListGet(BuildContext context) async {
-    AttendanceListResponse response = await _viewModel.attendanceListGet();
+    list_response.AttendanceListResponse response = await _viewModel.attendanceListGet();
     if (response.success) {
       data = response.items!;
     }
@@ -79,29 +81,51 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
                         itemBuilder: (context, index) {
                           return InkWell(
                             onTap: () {
-
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => AttendanceCheckScreen(
+                                      attendanceId: data[index].attendanceId),
+                                ),
+                              );
                             },
-                            child: Card(
-                              clipBehavior: Clip.antiAlias, // 둥근 모서리 적용을 위함
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(
-                                    child: Image.network(
-                                      '이미지 URL',
-                                      fit: BoxFit.cover,
+                            child: Flexible(
+                              child: Card(
+                                clipBehavior: Clip.antiAlias, // 둥근 모서리 적용을 위함
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(
+                                      child: Image.network(
+                                        '이미지 URL',
+                                        fit: BoxFit.cover,
+                                      ),
                                     ),
-                                  ),
-                                  ListTile(
-                                    title: Text(
-                                        '$index, ${data[index].attendance.title}'),
-                                    subtitle: Text(
-                                        '$index, ${data[index].attendance.description}'),
-                                  ),
-                                ],
+                                    ListTile(
+                                      title: Text(
+                                        '$index, ${data[index].attendance.title}',
+                                      ),
+                                      subtitle: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            '$index,description ${data[index].attendance.description}',
+                                          ),
+                                          // const SizedBox(height: 10),
+                                          // Text(
+                                          //   '$index, ${data[index].attendance.description}',
+                                          // ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           );
@@ -117,11 +141,14 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Navigator.push(
-          //   context,
-          //   MaterialPageRoute(builder: (context) => addAttendanceScreen()),
-          // );
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => AttendanceAddScreen()),
+          );
         },
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
         backgroundColor: const Color(0xFF054302),
         child: const Icon(Icons.add),
       ),
