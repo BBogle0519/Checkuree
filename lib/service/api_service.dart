@@ -48,10 +48,8 @@ class ApiService {
                 'refreshToken': refreshToken,
               },
             );
-            accessToken =
-                SignInResponse.fromJson(response.data).data!.accessToken!;
-            refreshToken =
-                SignInResponse.fromJson(response.data).data!.refreshToken!;
+            accessToken = SignInResponse.fromJson(response.data).data!.accessToken!;
+            refreshToken = SignInResponse.fromJson(response.data).data!.refreshToken!;
             print("ApiService: 재요청 후 saveData");
             await _saveData();
 

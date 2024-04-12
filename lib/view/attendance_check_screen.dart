@@ -1,4 +1,5 @@
 import 'package:checkuuree/model/attendance_check_response.dart' as check_response;
+import 'package:checkuuree/view/attendee_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -19,6 +20,7 @@ class _AttendanceCheckScreenState extends State<AttendanceCheckScreen> {
   final AttendanceCheckViewModel _viewModel = AttendanceCheckViewModel();
   late List<check_response.Items> data = [];
   bool _showBottomSheet = true;
+  bool _showSave = false;
   DateTime currentDate = DateTime.now();
   final daysInMonth = DateUtils.getDaysInMonth;
 
@@ -31,7 +33,6 @@ class _AttendanceCheckScreenState extends State<AttendanceCheckScreen> {
   Map<int, Map<String, dynamic>> tardyStates = {};
   Map<int, Map<String, dynamic>> absentStates = {};
 
-  // 주요 상태와 세부 사유를 미리 정의
   final List<String> mainStates = ['selectedAttendance', 'selectedTardy', 'selectedAbsent'];
   final List<String> tardyDetails = ['5Minute', '10Minute', '15Minute', '20moreMinute'];
   final List<String> absentDetails = ['Excused', 'Sick', 'Unexcused', 'Other'];
@@ -40,6 +41,135 @@ class _AttendanceCheckScreenState extends State<AttendanceCheckScreen> {
   void initState() {
     super.initState();
     _loadAttendeesList();
+  }
+
+  Positioned buildBottomSheet(BuildContext context) {
+    Widget content = _showSave
+        ? Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                  onPressed: () {},
+                  child: const Text(
+                    "취소",
+                    style: TextStyle(fontSize: 16, color: Colors.black),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () {},
+                  child: const Text(
+                    "확인",
+                    style: TextStyle(fontSize: 16, color: Colors.black),
+                  ),
+                ),
+              ],
+            ),
+          )
+        : BottomSheet(
+            onClosing: () {},
+            builder: (context) => Container(
+              decoration: const BoxDecoration(
+                color: Color(0xFF054302),
+                borderRadius: BorderRadius.all(Radius.circular(30)),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Column(
+                      children: [
+                        IconButton(
+                          icon: const Icon(
+                            Icons.how_to_reg,
+                            color: Colors.white,
+                          ),
+                          onPressed: () {},
+                        ),
+                        const Text(
+                          "출석 체크",
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Column(
+                      children: [
+                        IconButton(
+                          icon: const Icon(
+                            Icons.show_chart,
+                            color: Colors.white,
+                          ),
+                          onPressed: () {},
+                        ),
+                        const Text(
+                          "출석 통계",
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Column(
+                      children: [
+                        IconButton(
+                          icon: const Icon(
+                            Icons.list,
+                            color: Colors.white,
+                          ),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const AttendeeListScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                        const Text(
+                          "명단 관리",
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Column(
+                      children: [
+                        IconButton(
+                          icon: const Icon(
+                            Icons.tune,
+                            color: Colors.white,
+                          ),
+                          onPressed: () {},
+                        ),
+                        const Text(
+                          "출석부 설정",
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+
+    return Positioned(
+      left: 0,
+      right: 0,
+      bottom: 30,
+      child: _showBottomSheet ? content : const SizedBox(),
+    );
   }
 
   void toggleItemSelection(Map<int, Map<String, dynamic>> statesMap, int index, String stateKey) {
@@ -78,6 +208,13 @@ class _AttendanceCheckScreenState extends State<AttendanceCheckScreen> {
       // 로깅을 통해 상태 변경 확인
       print("toggleItemSelection 호출됨: index=$index, stateKey=$stateKey, \n states=${statesMap[index]}");
       print("");
+
+      if (statesMap[index]!.values.any((value) => value == true)) {
+        _showSave = true;
+      }
+      if (statesMap[index]!.values.every((value) => value == false)) {
+        _showSave = false;
+      }
     });
   }
 
@@ -238,315 +375,314 @@ class _AttendanceCheckScreenState extends State<AttendanceCheckScreen> {
                     Expanded(
                       child: data.isNotEmpty
                           ? ListView.builder(
-                              itemCount: data.length,
+                              itemCount: data.length + 1,
                               itemBuilder: (context, index) {
-                                return Column(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 0.0,
-                                        vertical: 12,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(8.0),
-                                        border: Border.all(
-                                          width: 1,
-                                          color: const Color(0xFF59996B),
+                                if (index == data.length) {
+                                  //최하단 항목이 메뉴에 가리는 문제 해결 위함
+                                  return const SizedBox(
+                                    height: 150.0,
+                                  );
+                                } else {
+                                  return Column(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 0.0,
+                                          vertical: 12,
                                         ),
-                                        color: (attendanceStates[index]?['selectedAttendance'] == true)
-                                            ? const Color(0xFFEDF9E3)
-                                            : (attendanceStates[index]?['selectedTardy'] == true)
-                                                ? const Color(0xFFEDC588)
-                                                : (attendanceStates[index]?['selectedAbsent'] == true)
-                                                    ? const Color(0xFFE9B3B3)
-                                                    : Colors.white,
-                                      ),
-                                      child: Expanded(
-                                        child: Padding(
-                                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                                          child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.start,
-                                            crossAxisAlignment: CrossAxisAlignment.center,
-                                            children: [
-                                              Text(
-                                                '${data[index].name} ',
-                                                style: const TextStyle(fontSize: 16),
-                                              ),
-                                              InkWell(
-                                                onTap: () {
-                                                  setState(() {
-                                                    final currentItemVisibility = _isFormItemVisible[index] ?? false;
-                                                    _isFormItemVisible[index] = !currentItemVisibility;
-                                                  });
-                                                },
-                                                child: Container(
-                                                  padding: EdgeInsets.zero,
-                                                  width: 20.0,
-                                                  height: 20.0,
-                                                  child: const Icon(
-                                                    size: 20,
-                                                    Icons.arrow_drop_down_circle,
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(8.0),
+                                          border: Border.all(
+                                            width: 1,
+                                            color: const Color(0xFF59996B),
+                                          ),
+                                          color: (attendanceStates[index]?['selectedAttendance'] == true)
+                                              ? const Color(0xFFEDF9E3)
+                                              : (attendanceStates[index]?['selectedTardy'] == true)
+                                                  ? const Color(0xFFEDC588)
+                                                  : (attendanceStates[index]?['selectedAbsent'] == true)
+                                                      ? const Color(0xFFE9B3B3)
+                                                      : Colors.white,
+                                        ),
+                                        child: Expanded(
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                                            child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.start,
+                                              crossAxisAlignment: CrossAxisAlignment.center,
+                                              children: [
+                                                Text(
+                                                  '${data[index].name} ',
+                                                  style: const TextStyle(fontSize: 16),
+                                                ),
+                                                InkWell(
+                                                  onTap: () {
+                                                    setState(() {
+                                                      final currentItemVisibility = _isFormItemVisible[index] ?? false;
+                                                      _isFormItemVisible[index] = !currentItemVisibility;
+                                                    });
+                                                  },
+                                                  child: Container(
+                                                    padding: EdgeInsets.zero,
+                                                    width: 20.0,
+                                                    height: 20.0,
+                                                    child: const Icon(
+                                                      size: 20,
+                                                      Icons.arrow_drop_down_circle,
+                                                    ),
                                                   ),
                                                 ),
-                                              ),
-                                              Flexible(
-                                                child: Row(
-                                                  mainAxisAlignment: MainAxisAlignment.end,
-                                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                                  children: List.generate(
-                                                    3,
-                                                    (statusIndex) {
-                                                      String stateKey;
-                                                      switch (statusIndex) {
-                                                        case 0:
-                                                          stateKey = 'selectedAttendance';
-                                                          break;
-                                                        case 1:
-                                                          stateKey = 'selectedTardy';
-                                                          break;
-                                                        case 2:
-                                                          stateKey = 'selectedAbsent';
-                                                          break;
-                                                        default:
-                                                          stateKey = 'null';
-                                                      }
-                                                      return Flexible(
-                                                        child: Padding(
-                                                          padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                                                          child: InkWell(
-                                                            onTap: () => toggleItemSelection(attendanceStates, index, stateKey),
-                                                            child: Container(
-                                                              padding: const EdgeInsets.symmetric(
-                                                                horizontal: 10.0,
-                                                                vertical: 4.0,
-                                                              ),
-                                                              decoration: BoxDecoration(
-                                                                color:
-                                                                    (attendanceStates[index]?[stateKey] == true) ? Colors.black : Colors.transparent,
-                                                                borderRadius: BorderRadius.circular(21.0),
-                                                                border: Border.all(
-                                                                  color: (attendanceStates[index]?[stateKey] == true) ? Colors.black : Colors.grey,
+                                                Flexible(
+                                                  child: Row(
+                                                    mainAxisAlignment: MainAxisAlignment.end,
+                                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                                    children: List.generate(
+                                                      3,
+                                                      (statusIndex) {
+                                                        String stateKey;
+                                                        switch (statusIndex) {
+                                                          case 0:
+                                                            stateKey = 'selectedAttendance';
+                                                            break;
+                                                          case 1:
+                                                            stateKey = 'selectedTardy';
+                                                            break;
+                                                          case 2:
+                                                            stateKey = 'selectedAbsent';
+                                                            break;
+                                                          default:
+                                                            stateKey = 'null';
+                                                        }
+                                                        return Flexible(
+                                                          child: Padding(
+                                                            padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                                                            child: InkWell(
+                                                              onTap: () => toggleItemSelection(attendanceStates, index, stateKey),
+                                                              child: Container(
+                                                                padding: const EdgeInsets.symmetric(
+                                                                  horizontal: 10.0,
+                                                                  vertical: 4.0,
                                                                 ),
-                                                              ),
-                                                              child: Text(
-                                                                [
-                                                                  '출석',
-                                                                  '지각',
-                                                                  '결석',
-                                                                ][statusIndex],
-                                                                style: TextStyle(
-                                                                  color: (attendanceStates[index]?[stateKey] == true) ? Colors.white : Colors.black,
+                                                                decoration: BoxDecoration(
+                                                                  color: (attendanceStates[index]?[stateKey] == true)
+                                                                      ? Colors.black
+                                                                      : Colors.transparent,
+                                                                  borderRadius: BorderRadius.circular(21.0),
+                                                                  border: Border.all(
+                                                                    color: (attendanceStates[index]?[stateKey] == true) ? Colors.black : Colors.grey,
+                                                                  ),
+                                                                ),
+                                                                child: Text(
+                                                                  [
+                                                                    '출석',
+                                                                    '지각',
+                                                                    '결석',
+                                                                  ][statusIndex],
+                                                                  style: TextStyle(
+                                                                    color: (attendanceStates[index]?[stateKey] == true) ? Colors.white : Colors.black,
+                                                                  ),
                                                                 ),
                                                               ),
                                                             ),
                                                           ),
-                                                        ),
-                                                      );
-                                                    },
+                                                        );
+                                                      },
+                                                    ),
                                                   ),
                                                 ),
-                                              ),
-                                            ],
+                                              ],
+                                            ),
                                           ),
                                         ),
                                       ),
-                                    ),
-                                    if (_isFormItemVisible[index] == true && attendanceStates[index]?.values.any((value) => value) == true)
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(vertical: 4.0),
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 0.0,
-                                            vertical: 4.0,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(8.0),
-                                            color: (attendanceStates[index]?["selectedAttendance"] == true)
-                                                ? const Color(0xFFEDF9E3)
-                                                : (attendanceStates[index]?["selectedTardy"] == true)
-                                                    ? const Color(0xFFEDC588)
-                                                    : (attendanceStates[index]?["selectedAbsent"] == true)
-                                                        ? const Color(0xFFE9B3B3)
-                                                        : Colors.white,
-                                          ),
-                                          child: Column(
-                                            children: [
-                                              attendanceStates[index]?["selectedTardy"] == true
-                                                  ? Row(
-                                                      children: List.generate(
-                                                        4,
-                                                        (statusIndex) {
-                                                          String stateKey;
-                                                          switch (statusIndex) {
-                                                            case 0:
-                                                              stateKey = '5Minute';
-                                                              break;
-                                                            case 1:
-                                                              stateKey = '10Minute';
-                                                              break;
-                                                            case 2:
-                                                              stateKey = '15Minute';
-                                                              break;
-                                                            case 3:
-                                                              stateKey = '20moreMinute';
-                                                              break;
-                                                            default:
-                                                              stateKey = 'null';
-                                                          }
-                                                          return Flexible(
-                                                            child: Padding(
-                                                              padding: const EdgeInsets.symmetric(
-                                                                horizontal: 4.0,
-                                                                vertical: 4.0,
-                                                              ),
-                                                              child: InkWell(
-                                                                onTap: () => toggleItemSelection(tardyStates, index, stateKey),
-                                                                child: Container(
-                                                                  padding: const EdgeInsets.symmetric(
-                                                                    horizontal: 8.0,
-                                                                    vertical: 0.0,
-                                                                  ),
-                                                                  decoration: BoxDecoration(
-                                                                    color:
-                                                                        (tardyStates[index]?[stateKey] == true) ? Colors.black : Colors.transparent,
-                                                                    borderRadius: BorderRadius.circular(21.0),
-                                                                    border: Border.all(
+                                      if (_isFormItemVisible[index] == true && attendanceStates[index]?.values.any((value) => value) == true)
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(vertical: 4.0),
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 0.0,
+                                              vertical: 0.0,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              borderRadius: BorderRadius.circular(8.0),
+                                              color: (attendanceStates[index]?["selectedAttendance"] == true)
+                                                  ? const Color(0xFFEDF9E3)
+                                                  : (attendanceStates[index]?["selectedTardy"] == true)
+                                                      ? const Color(0xFFEDC588)
+                                                      : (attendanceStates[index]?["selectedAbsent"] == true)
+                                                          ? const Color(0xFFE9B3B3)
+                                                          : Colors.white,
+                                            ),
+                                            child: Column(
+                                              children: [
+                                                attendanceStates[index]?["selectedTardy"] == true
+                                                    ? Row(
+                                                        children: List.generate(
+                                                          4,
+                                                          (statusIndex) {
+                                                            String stateKey;
+                                                            switch (statusIndex) {
+                                                              case 0:
+                                                                stateKey = '5Minute';
+                                                                break;
+                                                              case 1:
+                                                                stateKey = '10Minute';
+                                                                break;
+                                                              case 2:
+                                                                stateKey = '15Minute';
+                                                                break;
+                                                              case 3:
+                                                                stateKey = '20moreMinute';
+                                                                break;
+                                                              default:
+                                                                stateKey = 'null';
+                                                            }
+                                                            return Flexible(
+                                                              child: Padding(
+                                                                padding: const EdgeInsets.symmetric(
+                                                                  horizontal: 4.0,
+                                                                  vertical: 4.0,
+                                                                ),
+                                                                child: InkWell(
+                                                                  onTap: () => toggleItemSelection(tardyStates, index, stateKey),
+                                                                  child: Container(
+                                                                    padding: const EdgeInsets.symmetric(
+                                                                      horizontal: 8.0,
+                                                                      vertical: 0.0,
+                                                                    ),
+                                                                    decoration: BoxDecoration(
                                                                       color:
                                                                           (tardyStates[index]?[stateKey] == true) ? Colors.black : Colors.transparent,
+                                                                      borderRadius: BorderRadius.circular(21.0),
+                                                                      border: Border.all(
+                                                                        color: (tardyStates[index]?[stateKey] == true)
+                                                                            ? Colors.black
+                                                                            : Colors.transparent,
+                                                                      ),
                                                                     ),
-                                                                  ),
-                                                                  child: Text(
-                                                                    [
-                                                                      '5분',
-                                                                      '10분',
-                                                                      '15분',
-                                                                      '20분 이상',
-                                                                    ][statusIndex],
-                                                                    style: TextStyle(
-                                                                      fontSize: 12,
-                                                                      color: (tardyStates[index]?[stateKey] == true) ? Colors.white : Colors.black,
+                                                                    child: Text(
+                                                                      [
+                                                                        '5분',
+                                                                        '10분',
+                                                                        '15분',
+                                                                        '20분 이상',
+                                                                      ][statusIndex],
+                                                                      style: TextStyle(
+                                                                        fontSize: 12,
+                                                                        color: (tardyStates[index]?[stateKey] == true) ? Colors.white : Colors.black,
+                                                                      ),
                                                                     ),
                                                                   ),
                                                                 ),
                                                               ),
-                                                            ),
-                                                          );
-                                                        },
-                                                      ),
-                                                    )
-                                                  : attendanceStates[index]?["selectedAbsent"] == true
-                                                      ? Row(
-                                                          children: [
-                                                            ...List.generate(
-                                                              4,
-                                                              (statusIndex) {
-                                                                String stateKey;
-                                                                switch (statusIndex) {
-                                                                  case 0:
-                                                                    stateKey = 'Excused';
-                                                                    break;
-                                                                  case 1:
-                                                                    stateKey = 'Sick';
-                                                                    break;
-                                                                  case 2:
-                                                                    stateKey = 'Unexcused';
-                                                                    break;
-                                                                  case 3:
-                                                                    stateKey = 'Other';
-                                                                    break;
-                                                                  default:
-                                                                    stateKey = 'null';
-                                                                }
-                                                                return Flexible(
-                                                                  child: Padding(
-                                                                    padding: const EdgeInsets.symmetric(
-                                                                      horizontal: 4.0,
-                                                                      vertical: 4.0,
-                                                                    ),
-                                                                    child: InkWell(
-                                                                      onTap: () => toggleItemSelection(absentStates, index, stateKey),
-                                                                      child: Container(
-                                                                        padding: const EdgeInsets.symmetric(
-                                                                          horizontal: 8.0,
-                                                                          vertical: 0.0,
-                                                                        ),
-                                                                        decoration: BoxDecoration(
-                                                                          color: (absentStates[index]?[stateKey] == true)
-                                                                              ? Colors.black
-                                                                              : Colors.transparent,
-                                                                          borderRadius: BorderRadius.circular(21.0),
-                                                                          border: Border.all(
+                                                            );
+                                                          },
+                                                        ),
+                                                      )
+                                                    : attendanceStates[index]?["selectedAbsent"] == true
+                                                        ? Row(
+                                                            children: [
+                                                              ...List.generate(
+                                                                4,
+                                                                (statusIndex) {
+                                                                  String stateKey;
+                                                                  switch (statusIndex) {
+                                                                    case 0:
+                                                                      stateKey = 'Excused';
+                                                                      break;
+                                                                    case 1:
+                                                                      stateKey = 'Sick';
+                                                                      break;
+                                                                    case 2:
+                                                                      stateKey = 'Unexcused';
+                                                                      break;
+                                                                    case 3:
+                                                                      stateKey = 'Other';
+                                                                      break;
+                                                                    default:
+                                                                      stateKey = 'null';
+                                                                  }
+                                                                  return Flexible(
+                                                                    child: Padding(
+                                                                      padding: const EdgeInsets.symmetric(
+                                                                        horizontal: 4.0,
+                                                                        vertical: 4.0,
+                                                                      ),
+                                                                      child: InkWell(
+                                                                        onTap: () => toggleItemSelection(absentStates, index, stateKey),
+                                                                        child: Container(
+                                                                          padding: const EdgeInsets.symmetric(
+                                                                            horizontal: 8.0,
+                                                                            vertical: 0.0,
+                                                                          ),
+                                                                          decoration: BoxDecoration(
                                                                             color: (absentStates[index]?[stateKey] == true)
                                                                                 ? Colors.black
                                                                                 : Colors.transparent,
+                                                                            borderRadius: BorderRadius.circular(21.0),
+                                                                            border: Border.all(
+                                                                              color: (absentStates[index]?[stateKey] == true)
+                                                                                  ? Colors.black
+                                                                                  : Colors.transparent,
+                                                                            ),
                                                                           ),
-                                                                        ),
-                                                                        child: Text(
-                                                                          [
-                                                                            '공결',
-                                                                            '병결',
-                                                                            '무단',
-                                                                            '기타',
-                                                                          ][statusIndex],
-                                                                          style: TextStyle(
-                                                                            fontSize: 12,
-                                                                            color: (absentStates[index]?[stateKey] == true)
-                                                                                ? Colors.white
-                                                                                : Colors.black,
+                                                                          child: Text(
+                                                                            [
+                                                                              '공결',
+                                                                              '병결',
+                                                                              '무단',
+                                                                              '기타',
+                                                                            ][statusIndex],
+                                                                            style: TextStyle(
+                                                                              fontSize: 12,
+                                                                              color: (absentStates[index]?[stateKey] == true)
+                                                                                  ? Colors.white
+                                                                                  : Colors.black,
+                                                                            ),
                                                                           ),
                                                                         ),
                                                                       ),
                                                                     ),
-                                                                  ),
-                                                                );
-                                                              },
-                                                            ),
-                                                          ],
-                                                        )
-                                                      : Container(),
-                                              // if (_isFormVisible &&
-                                              //     selectedAttendanceIndex != null)
+                                                                  );
+                                                                },
+                                                              ),
+                                                            ],
+                                                          )
+                                                        : Container(),
+                                                // if (_isFormVisible &&
+                                                //     selectedAttendanceIndex != null)
 
-                                              if (_isFormItemVisible[index] == true &&
-                                                  (attendanceStates[index]?.values.any((value) => value == true) ?? true)) ...[
-                                                Padding(
-                                                  padding: const EdgeInsets.all(4.0),
-                                                  child: TextFormField(
-                                                    keyboardType: TextInputType.multiline,
-                                                    maxLines: null,
-                                                    textAlignVertical: TextAlignVertical.top,
-                                                    decoration: const InputDecoration(
-                                                      hintText: "설명 입력",
-                                                      border: InputBorder.none,
-                                                      filled: true,
-                                                      fillColor: Colors.white,
-                                                      // border: OutlineInputBorder(
-                                                      //   borderSide: BorderSide(
-                                                      //     color: selectedAttendanceIndex == 0
-                                                      //         ? const Color(0xFFEDF9E3)
-                                                      //         : selectedAttendanceIndex == 1
-                                                      //         ? const Color(0xFFEDC588)
-                                                      //         : selectedAttendanceIndex == 2
-                                                      //         ? const Color(0xFFE9B3B3)
-                                                      //         : Colors.white,
-                                                      //     width: 1.0,
-                                                      //   ),
-                                                      //   borderRadius:
-                                                      //       BorderRadius.circular(
-                                                      //           8.0),
-                                                      // ),
-                                                      // hintText: "설명 입력",
+                                                if (_isFormItemVisible[index] == true &&
+                                                    (attendanceStates[index]?.values.any((value) => value == true) ?? true)) ...[
+                                                  Padding(
+                                                    padding: const EdgeInsets.all(6.0),
+                                                    child: Container(
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.white,
+                                                        borderRadius: BorderRadius.circular(8.0),
+                                                      ),
+                                                      child: TextFormField(
+                                                        keyboardType: TextInputType.multiline,
+                                                        maxLines: null,
+                                                        textAlignVertical: TextAlignVertical.top,
+                                                        decoration: const InputDecoration(
+                                                          hintText: "설명 입력",
+                                                          border: InputBorder.none,
+                                                          filled: true,
+                                                          fillColor: Colors.transparent,
+                                                        ),
+                                                      ),
                                                     ),
                                                   ),
-                                                ),
-                                              ]
-                                            ],
+                                                ]
+                                              ],
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                    const SizedBox(height: 4.0),
-                                  ],
-                                );
+                                      const SizedBox(height: 4.0),
+                                    ],
+                                  );
+                                }
                               },
                             )
                           : const Center(
@@ -557,102 +693,7 @@ class _AttendanceCheckScreenState extends State<AttendanceCheckScreen> {
                 ),
               ),
             ),
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 30,
-              child: _showBottomSheet
-                  ? BottomSheet(
-                      onClosing: () {}, // 필요에 따라 구현
-                      builder: (context) => Container(
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF054302),
-                          borderRadius: BorderRadius.all(Radius.circular(30)),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              Column(
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.how_to_reg,
-                                      color: Colors.white,
-                                    ),
-                                    onPressed: () {},
-                                  ),
-                                  const Text(
-                                    "출석 체크",
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Column(
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.show_chart,
-                                      color: Colors.white,
-                                    ),
-                                    onPressed: () {},
-                                  ),
-                                  const Text(
-                                    "출석 통계",
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Column(
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.list,
-                                      color: Colors.white,
-                                    ),
-                                    onPressed: () {},
-                                  ),
-                                  const Text(
-                                    "명단 관리",
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Column(
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.tune,
-                                      color: Colors.white,
-                                    ),
-                                    onPressed: () {},
-                                  ),
-                                  const Text(
-                                    "출석부 설정",
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    )
-                  : const SizedBox(),
-            ),
+            buildBottomSheet(context),
           ],
         ),
       ),

@@ -2,7 +2,9 @@ import 'package:checkuuree/model/attendance_list_response.dart' as list_response
 import 'package:checkuuree/view/attendance_add_screen.dart';
 import 'package:checkuuree/view/attendance_check_screen.dart';
 import 'package:checkuuree/view_model/attendance_list_view_model.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 
 class AttendanceListScreen extends StatefulWidget {
@@ -20,8 +22,17 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
   late final String formattedDate;
   late final String date;
 
-  // print($date);
-  // print("요일: $formattedDate");
+  final Map<String, String> dayMappings = {
+    'MONDAY': '월',
+    'TUESDAY': '화',
+    'WEDNESDAY': '수',
+    'THURSDAY': '목',
+    'FRIDAY': '금',
+    'SATURDAY': '토',
+    'SUNDAY': '일'
+  };
+  final Map<int, String> intToDayMappings = {1: 'MONDAY', 2: 'TUESDAY', 3: 'WEDNESDAY', 4: 'THURSDAY', 5: 'FRIDAY', 6: 'SATURDAY', 7: 'SUNDAY'};
+  final Map<String, int> dayIntMaps = {'월': 1, '화': 2, '수': 3, '목': 4, '금': 5, '토': 6, '일': 7};
 
   @override
   void initState() {
@@ -47,12 +58,48 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
     return response.success;
   }
 
+  List<String> getSelectedDays(int index) {
+    List<String> selectedDays = [];
+    List<String> daysList = data[index].attendance.days ?? [];
+    for (String day in daysList) {
+      String koreanDay = dayMappings[day] ?? "null";
+      selectedDays.add(koreanDay);
+    }
+    return selectedDays;
+  }
+
+  // 한국어 요일명을 숫자 리스트로 변환
+  List<int> convertDaysToIntList(List<String> days) {
+    return days.map((day) => dayIntMaps[day]).where((element) => element != null).cast<int>().toList();
+  }
+
+  String formatDays(List<int> sortedDays) {
+    if (sortedDays.isEmpty) return '';
+    sortedDays.sort();
+    List<String> dayNames = sortedDays.map((day) => intToDayMappings[day]!).toList();
+
+    List<String> formattedDays = [];
+    int start = 0; // 연속된 요일의 시작 인덱스
+    for (int i = 0; i < dayNames.length; i++) {
+      // 다음 요일이 현재 요일의 바로 다음 요일이 아니거나, 리스트의 끝에 도달한 경우
+      if (i == dayNames.length - 1 || dayIntMaps[dayMappings[dayNames[i + 1]]!]! != dayIntMaps[dayMappings[dayNames[i]]!]! + 1) {
+        // 현재 요일이 시작 요일과 같은 경우 (단일 요일)
+        if (i == start) {
+          formattedDays.add(dayMappings[dayNames[i]]!);
+        } else {
+          // 현재 요일이 시작 요일과 다른 경우 (연속된 요일)
+          formattedDays.add("${dayMappings[dayNames[start]]!}-${dayMappings[dayNames[i]]!}");
+        }
+        start = i + 1; // 다음 연속된 요일의 시작 인덱스를 업데이트
+      }
+    }
+
+    return formattedDays.join(", ");
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("출석부 목록"),
-      ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Form(
@@ -60,6 +107,7 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const SizedBox(height: 30),
               Text(
                 "$date $formattedDate",
                 style: const TextStyle(fontSize: 14),
@@ -71,8 +119,7 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
               Expanded(
                 child: data.isNotEmpty
                     ? GridView.builder(
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
                           crossAxisSpacing: 4.0,
                           mainAxisSpacing: 4.0,
@@ -84,47 +131,67 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => AttendanceCheckScreen(
-                                      attendanceId: data[index].attendanceId),
+                                  builder: (context) => AttendanceCheckScreen(attendanceId: data[index].attendanceId),
                                 ),
                               );
                             },
                             child: Flexible(
-                              child: Card(
-                                clipBehavior: Clip.antiAlias, // 둥근 모서리 적용을 위함
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: const Color(0xFF59996B),
+                                    width: 1.0,
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Expanded(
-                                      child: Image.network(
-                                        '이미지 URL',
-                                        fit: BoxFit.cover,
+                                child: Card(
+                                  clipBehavior: Clip.antiAlias,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Expanded(
+                                        child: Image.network(
+                                          'https://play-lh.googleusercontent.com/ADg24o30zrA8aN9PpFBVrgFX2G7A8mgf3tLIcGjpihXlg0NonhtjiowXmpSzB0v8F60=w480-h960-rw',
+                                          fit: BoxFit.cover,
+                                        ),
                                       ),
-                                    ),
-                                    ListTile(
-                                      title: Text(
-                                        '$index, ${data[index].attendance.title}',
+                                      Text(
+                                        data[index].attendance.title,
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
-                                      subtitle: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.start,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                                      const SizedBox(height: 10),
+                                      Text(
+                                        data[index].attendance.description,
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          color: Color(0xFF797979),
+                                        ),
+                                      ),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.start,
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          Text(
-                                            '$index,description ${data[index].attendance.description}',
+                                          Expanded(
+                                            child: Text(
+                                              formatDays(convertDaysToIntList(getSelectedDays(index))),
+                                              // convertDaysToIntList(getSelectedDays(index)).toString(),
+                                              // getSelectedDays(index).toString(),
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                                color: Color(0xFF797979),
+                                              ),
+                                            ),
                                           ),
-                                          // const SizedBox(height: 10),
-                                          // Text(
-                                          //   '$index, ${data[index].attendance.description}',
-                                          // ),
                                         ],
-                                      ),
-                                    ),
-                                  ],
+                                      )
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
@@ -141,10 +208,26 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => AttendanceAddScreen()),
-          );
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            builder: (BuildContext context) {
+              return const FractionallySizedBox(
+                heightFactor: 0.9, // 모달의 높이를 화면 높이의 90%로 설정
+                child: ClipRRect(
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
+                  child: AttendanceAddScreen(),
+                ),
+              );
+            },
+          ).then((value) {
+            if (value == true) {
+              _loadAttendanceList();
+            }
+          });
         },
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),

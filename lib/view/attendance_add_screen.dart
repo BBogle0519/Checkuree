@@ -1,47 +1,40 @@
+import 'package:checkuuree/model/attendance_add_response.dart';
 import 'package:checkuuree/utils/show_toast.dart';
+import 'package:checkuuree/view_model/attendance_add_view_model.dart';
 import 'package:flutter/material.dart';
 
 class AttendanceAddScreen extends StatefulWidget {
+  const AttendanceAddScreen({super.key});
+
   @override
   State<AttendanceAddScreen> createState() => _AttendanceAddScreenState();
 }
 
 class _AttendanceAddScreenState extends State<AttendanceAddScreen> {
   final _formKey = GlobalKey<FormState>();
+  final AttendanceAddViewModel _viewModel = AttendanceAddViewModel();
   final TextEditingController _nameController = TextEditingController();
   final List<bool> _isSelected = List.generate(7, (_) => false);
   String? _startDropSelectedValue;
   String? _endDropSelectedValue;
   bool _selectedValue = true;
   bool _isDaySelectedErrorVisible = false;
+  List<String> daysOfWeek = ['월', '화', '수', '목', '금', '토', '일'];
+  Map<String, String> dayMappings = {'월': 'MONDAY', '화': 'TUESDAY', '수': 'WEDNESDAY', '목': 'THURSDAY', '금': 'FRIDAY', '토': 'SATURDAY', '일': 'SUNDAY'};
 
   List<DropdownMenuItem<String>> _getEndDropdownItems() {
-    // 첫 번째 드롭다운에서 선택된 시간이 없으면, 모든 시간을 포함하는 리스트 반환
     if (_startDropSelectedValue == null) {
-      return List.generate(
-              24, (index) => '${index.toString().padLeft(2, '0')}:00')
-          .map<DropdownMenuItem<String>>((String value) {
+      // 첫 번째 드롭다운에서 시간이 선택되지 않았으면, 모든 시간을 포함하는 리스트 반환
+      return List.generate(25, (index) => '${index.toString().padLeft(2, '0')}:00').map<DropdownMenuItem<String>>((String value) {
         return DropdownMenuItem<String>(
           value: value,
           child: Text(value),
         );
       }).toList();
     } else {
-      // 첫 번째 드롭다운에서 선택된 시간이 23:00일 경우, 24:00만 포함하는 리스트 반환
-      if (_startDropSelectedValue == '23:00') {
-        return [
-          const DropdownMenuItem<String>(
-            value: '24:00',
-            child: Text('24:00'),
-          ),
-        ];
-      }
       // 첫 번째 드롭다운에서 선택된 시간의 다음 시간부터 리스트 반환
       int startHour = int.parse(_startDropSelectedValue!.split(':')[0]);
-      return List.generate(
-              23 - startHour,
-              (index) =>
-                  '${(startHour + index + 1).toString().padLeft(2, '0')}:00')
+      return List.generate(24 - startHour, (index) => '${(startHour + index + 1).toString().padLeft(2, '0')}:00')
           .map<DropdownMenuItem<String>>((String value) {
         return DropdownMenuItem<String>(
           value: value,
@@ -51,12 +44,41 @@ class _AttendanceAddScreenState extends State<AttendanceAddScreen> {
     }
   }
 
+  List<String> getSelectedDays() {
+    List<String> selectedDays = [];
+
+    for (int i = 0; i < _isSelected.length; i++) {
+      if (_isSelected[i]) {
+        String dayInEnglish = dayMappings[daysOfWeek[i]]!;
+        selectedDays.add(dayInEnglish);
+      }
+    }
+
+    return selectedDays;
+  }
+
+  Future<bool> _addAttendance(BuildContext context) async {
+    String title = _nameController.text;
+    String description = "설명 입력란이 아직은 없어요";
+    String availableFrom = _startDropSelectedValue!.replaceAll(":", "");
+    String availableTo = _endDropSelectedValue!.replaceAll(":", "");
+    bool allowLateness = _selectedValue;
+    List<String> attendanceDays = getSelectedDays();
+    AttendanceAddResponse response = await _viewModel.attendanceAddPost(
+      title,
+      description,
+      availableFrom,
+      availableTo,
+      allowLateness,
+      attendanceDays,
+    );
+
+    return response.success;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("출석부 추가 화면"),
-      ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Form(
@@ -227,22 +249,16 @@ class _AttendanceAddScreenState extends State<AttendanceAddScreen> {
                                 vertical: 8.0,
                               ),
                               decoration: BoxDecoration(
-                                color: _isSelected[index]
-                                    ? Colors.green
-                                    : Colors.transparent,
+                                color: _isSelected[index] ? Colors.green : Colors.transparent,
                                 borderRadius: BorderRadius.circular(8.0),
                                 border: Border.all(
-                                  color: _isSelected[index]
-                                      ? Colors.green
-                                      : Colors.grey,
+                                  color: _isSelected[index] ? Colors.green : Colors.grey,
                                 ),
                               ),
                               child: Text(
-                                ['월', '화', '수', '목', '금', '토', '일'][index],
+                                daysOfWeek[index],
                                 style: TextStyle(
-                                  color: _isSelected[index]
-                                      ? Colors.white
-                                      : Colors.black,
+                                  color: _isSelected[index] ? Colors.white : Colors.black,
                                 ),
                               ),
                             ),
@@ -257,7 +273,7 @@ class _AttendanceAddScreenState extends State<AttendanceAddScreen> {
                 const SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Flexible(
                       child: DropdownButtonHideUnderline(
@@ -273,16 +289,13 @@ class _AttendanceAddScreenState extends State<AttendanceAddScreen> {
                           borderRadius: BorderRadius.circular(8.0),
                           isExpanded: true,
                           decoration: InputDecoration(
-                            contentPadding:
-                                const EdgeInsets.symmetric(horizontal: 12),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 12),
                             enabledBorder: OutlineInputBorder(
-                              borderSide:
-                                  const BorderSide(color: Color(0xFFD5D5D5)),
+                              borderSide: const BorderSide(color: Color(0xFFD5D5D5)),
                               borderRadius: BorderRadius.circular(8.0),
                             ),
                             border: OutlineInputBorder(
-                              borderSide:
-                                  const BorderSide(color: Color(0xFFD5D5D5)),
+                              borderSide: const BorderSide(color: Color(0xFFD5D5D5)),
                               borderRadius: BorderRadius.circular(8.0),
                             ),
                           ),
@@ -327,8 +340,7 @@ class _AttendanceAddScreenState extends State<AttendanceAddScreen> {
                           onChanged: (newValue) {
                             setState(() {
                               _startDropSelectedValue = newValue;
-                              _endDropSelectedValue =
-                                  null; // 시작 시간이 변경되면 종료 시간 초기화
+                              _endDropSelectedValue = null;
                             });
                           },
                         ),
@@ -349,16 +361,13 @@ class _AttendanceAddScreenState extends State<AttendanceAddScreen> {
                           borderRadius: BorderRadius.circular(8.0),
                           isExpanded: true,
                           decoration: InputDecoration(
-                            contentPadding:
-                                const EdgeInsets.symmetric(horizontal: 12),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 12),
                             enabledBorder: OutlineInputBorder(
-                              borderSide:
-                                  const BorderSide(color: Color(0xFFD5D5D5)),
+                              borderSide: const BorderSide(color: Color(0xFFD5D5D5)),
                               borderRadius: BorderRadius.circular(8.0),
                             ),
                             border: OutlineInputBorder(
-                              borderSide:
-                                  const BorderSide(color: Color(0xFFD5D5D5)),
+                              borderSide: const BorderSide(color: Color(0xFFD5D5D5)),
                               borderRadius: BorderRadius.circular(8.0),
                             ),
                           ),
@@ -370,11 +379,13 @@ class _AttendanceAddScreenState extends State<AttendanceAddScreen> {
                             ),
                           ),
                           items: _getEndDropdownItems(),
-                          onChanged: (newValue) {
-                            setState(() {
-                              _endDropSelectedValue = newValue;
-                            });
-                          },
+                          onChanged: _startDropSelectedValue != null
+                              ? (newValue) {
+                                  setState(() {
+                                    _endDropSelectedValue = newValue;
+                                  });
+                                }
+                              : null,
                         ),
                       ),
                     ),
@@ -386,15 +397,24 @@ class _AttendanceAddScreenState extends State<AttendanceAddScreen> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Expanded(
+                      flex: 2,
                       child: ElevatedButton(
                         onPressed: () {
-                          bool isFormValid =
-                              _formKey.currentState?.validate() ?? false;
-                          bool isDaySelected =
-                              !_isSelected.every((element) => !element);
+                          Navigator.pop(context, true);
+                        },
+                        child: const Text("취소"),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 5,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          bool isFormValid = _formKey.currentState?.validate() ?? false;
+                          bool isDaySelected = !_isSelected.every((element) => !element);
 
                           if (isFormValid && isDaySelected) {
-                            Navigator.pop(context);
+                            await _addAttendance(context);
+                            Navigator.pop(context, "ok");
                           } else {
                             // print("폼 비정상임");
                             setState(() {

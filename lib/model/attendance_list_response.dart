@@ -12,10 +12,7 @@ class AttendanceListResponse {
   factory AttendanceListResponse.fromJson(Map<String, dynamic> json) {
     return AttendanceListResponse(
       count: (json['count'] as int?) ?? 0,
-      items: (json['items'] as List<dynamic>?)
-              ?.map((itemJson) => Items.fromJson(itemJson))
-              .toList() ??
-          [],
+      items: (json['items'] as List<dynamic>?)?.map((itemJson) => Items.fromJson(itemJson)).toList() ?? [],
       success: json['success'] as bool,
     );
   }
@@ -71,9 +68,17 @@ class Attendance {
   String id;
   String title;
   String description;
-  String type;
   int attendeeCount;
+  String availableFrom;
+  String availableTo;
+  bool allowLateness;
+  List<AttendanceDays>? attendanceDays;
+  List<String>? days;
 
+  // "days": [
+  // "TUESDAY",
+  // "THURSDAY"
+  // ]
   Attendance({
     required this.createId,
     required this.createdAt,
@@ -83,8 +88,12 @@ class Attendance {
     required this.id,
     required this.title,
     required this.description,
-    required this.type,
     required this.attendeeCount,
+    required this.availableFrom,
+    required this.availableTo,
+    required this.allowLateness,
+    this.attendanceDays,
+    this.days,
   });
 
   factory Attendance.fromJson(Map<String, dynamic> json) {
@@ -97,8 +106,32 @@ class Attendance {
       id: json['id'],
       title: json['title'],
       description: json['description'],
-      type: json['type'],
       attendeeCount: json['attendeeCount'],
+      availableFrom: json['availableFrom'],
+      availableTo: json['availableTo'],
+      allowLateness: json['allowLateness'],
+      attendanceDays: (json['attendanceDays'] as List<dynamic>?)?.map((itemJson) => AttendanceDays.fromJson(itemJson)).toList() ?? [],
+      days: json['days'].cast<String>(),
+    );
+  }
+}
+
+class AttendanceDays {
+  int id;
+  String attendanceId;
+  String day;
+
+  AttendanceDays({
+    required this.id,
+    required this.attendanceId,
+    required this.day,
+  });
+
+  factory AttendanceDays.fromJson(Map<String, dynamic> json) {
+    return AttendanceDays(
+      id: json['id'],
+      attendanceId: json['attendanceId'],
+      day: json['day'],
     );
   }
 }
