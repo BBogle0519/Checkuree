@@ -1,7 +1,14 @@
+import 'package:checkuuree/view/attendance_check_screen.dart';
+import 'package:checkuuree/model/attendees_list_response.dart' as attendees_list_response;
+import 'package:checkuuree/view/attendee_add_screen.dart';
 import 'package:flutter/material.dart';
+import '../view_model/attendees_list_view_model.dart';
 
 class AttendeeListScreen extends StatefulWidget {
-  const AttendeeListScreen({super.key});
+  //이전 화면에서 전달받은 데이터
+  final String attendanceId;
+
+  const AttendeeListScreen({super.key, required this.attendanceId});
 
   @override
   State<AttendeeListScreen> createState() => _AttendeeListScreenState();
@@ -10,6 +17,30 @@ class AttendeeListScreen extends StatefulWidget {
 class _AttendeeListScreenState extends State<AttendeeListScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _showBottomSheet = true;
+  bool _floatingButton = true;
+  final AttendeesListViewModel _viewModel = AttendeesListViewModel();
+  late List<attendees_list_response.Items> data = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAttendeesList();
+  }
+
+  Future<void> _loadAttendeesList() async {
+    bool success = await _attendeesListGet(context);
+    if (success) {
+      setState(() {});
+    }
+  }
+
+  Future<bool> _attendeesListGet(BuildContext context) async {
+    attendees_list_response.AttendeesListResponse response = await _viewModel.attendeesListGet(widget.attendanceId);
+    if (response.success) {
+      data = response.items!;
+    }
+    return response.success;
+  }
 
   Positioned buildBottomSheet(BuildContext context) {
     Widget content = BottomSheet(
@@ -31,7 +62,14 @@ class _AttendeeListScreenState extends State<AttendeeListScreen> {
                       Icons.how_to_reg,
                       color: Colors.white,
                     ),
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AttendanceCheckScreen(attendanceId: widget.attendanceId),
+                        ),
+                      );
+                    },
                   ),
                   const Text(
                     "출석 체크",
@@ -67,7 +105,9 @@ class _AttendeeListScreenState extends State<AttendeeListScreen> {
                       Icons.list,
                       color: Colors.white,
                     ),
-                    onPressed: () {},
+                    onPressed: () {
+                      setState(() {});
+                    },
                   ),
                   const Text(
                     "명단 관리",
@@ -117,14 +157,16 @@ class _AttendeeListScreenState extends State<AttendeeListScreen> {
       body: NotificationListener<ScrollNotification>(
         onNotification: (scrollNotification) {
           if (scrollNotification is ScrollStartNotification) {
-            // 스크롤이 시작될 때 하단 메뉴바 숨기기
+            // 스크롤이 시작될 때 숨기기
             setState(() {
               _showBottomSheet = false;
+              _floatingButton = false;
             });
           } else if (scrollNotification is ScrollEndNotification) {
-            // 스크롤이 종료될 때 하단 메뉴바 표시
+            // 스크롤이 종료될 때 표시
             setState(() {
               _showBottomSheet = true;
+              _floatingButton = true;
             });
           }
           return false;
@@ -162,31 +204,33 @@ class _AttendeeListScreenState extends State<AttendeeListScreen> {
                     ),
                     const SizedBox(height: 20),
                     Expanded(
-                      child: true
-                          // data.isNotEmpty
+                      child: data.isNotEmpty
                           ? GridView.builder(
                               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: 1,
                                 childAspectRatio: 5.5,
                                 crossAxisSpacing: 4.0,
-                                mainAxisSpacing: 1.0,
-
+                                mainAxisSpacing: 8.0,
                               ),
-                              itemCount: 1,
-                              // data.length,
+                              itemCount: data.length + 1,
                               itemBuilder: (context, index) {
-                                return InkWell(
-                                  onTap: () {
-                                    // Navigator.push(
-                                    //   context,
-                                    //   MaterialPageRoute(
-                                    //     builder: (context) => AttendanceCheckScreen(attendanceId: data[index].attendanceId),
-                                    //   ),
-                                    // );
-                                  },
-                                  child: Flexible(
-                                    flex: 1,
+                                if (index == data.length) {
+                                  //최하단 항목이 메뉴에 가리는 문제 해결 위함
+                                  return const SizedBox(
+                                    height: 150.0,
+                                  );
+                                } else {
+                                  return InkWell(
+                                    onTap: () {
+                                      // Navigator.push(
+                                      //   context,
+                                      //   MaterialPageRoute(
+                                      //     builder: (context) => AttendanceCheckScreen(attendanceId: data[index].attendanceId),
+                                      //   ),
+                                      // );
+                                    },
                                     child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
                                       decoration: BoxDecoration(
                                         border: Border.all(
                                           color: const Color(0xFF59996B),
@@ -194,50 +238,59 @@ class _AttendeeListScreenState extends State<AttendeeListScreen> {
                                         ),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
-                                      child: Card(
-                                        clipBehavior: Clip.antiAlias,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                        child: const Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              "이름",
-                                              // data[index].attendance.title,
-                                              style: TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                            SizedBox(height: 10),
-                                            Row(
-                                              mainAxisAlignment: MainAxisAlignment.start,
+                                      child: Expanded(
+                                        child: Card(
+                                          elevation: 0,
+                                          color: Colors.transparent,
+                                          clipBehavior: Clip.antiAlias,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          child: Expanded(
+                                            child: Column(
+                                              // mainAxisSize: MainAxisSize.min,
                                               crossAxisAlignment: CrossAxisAlignment.start,
                                               children: [
                                                 Expanded(
                                                   child: Text(
-                                                    "요일",
-                                                    style: TextStyle(
-                                                      fontSize: 14,
-                                                      color: Color(0xFF797979),
+                                                    '${data[index].name} ',
+                                                    style: const TextStyle(
+                                                      fontSize: 16,
+                                                      fontWeight: FontWeight.bold,
                                                     ),
                                                   ),
                                                 ),
-                                                Icon(Icons.mood),
-                                                // Text("$presentCount"),
-                                                Icon(Icons.access_time),
-                                                // Text("$tardyCount"),
-                                                Icon(Icons.cancel_outlined),
-                                                // Text("$absentCount"),
+                                                const Expanded(
+                                                  child: Row(
+                                                    mainAxisAlignment: MainAxisAlignment.start,
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: [
+                                                      Expanded(
+                                                        child: Text(
+                                                          "요일",
+                                                          style: TextStyle(
+                                                            fontSize: 14,
+                                                            color: Color(0xFF797979),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      Icon(Icons.mood),
+                                                      // Text("$presentCount"),
+                                                      Icon(Icons.access_time),
+                                                      // Text("$tardyCount"),
+                                                      Icon(Icons.cancel_outlined),
+                                                      // Text("$absentCount"),
+                                                    ],
+                                                  ),
+                                                )
                                               ],
-                                            )
-                                          ],
+                                            ),
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                );
+                                  );
+                                }
                               },
                             )
                           : const Center(
@@ -248,6 +301,42 @@ class _AttendeeListScreenState extends State<AttendeeListScreen> {
                 ),
               ),
             ),
+            if (_floatingButton)
+              Positioned(
+                right: 10,
+                bottom: 120,
+                child: FloatingActionButton(
+                  onPressed: () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      builder: (BuildContext context) {
+                        return FractionallySizedBox(
+                          heightFactor: 0.9, // 모달의 높이를 화면 높이의 90%로 설정
+                          child: ClipRRect(
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(20),
+                              topRight: Radius.circular(20),
+                            ),
+                            child: AttendeeAddScreen(
+                              attendanceId: widget.attendanceId,
+                            ),
+                          ),
+                        );
+                      },
+                    ).then((value) {
+                      if (value == true) {
+                        _loadAttendeesList();
+                      }
+                    });
+                  },
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  backgroundColor: const Color(0xFF054302),
+                  child: const Icon(Icons.add),
+                ),
+              ),
             buildBottomSheet(context),
           ],
         ),

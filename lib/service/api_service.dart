@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import '../model/sign_in_response.dart';
 
 late SharedPreferences _prefs;
@@ -12,7 +11,7 @@ class ApiService {
   static Function? onTokenRefreshFailed;
 
   static Dio _initializeDio() {
-    Dio dio = Dio(BaseOptions(baseUrl: 'https://checkuree.com'));
+    Dio dio = Dio(BaseOptions(baseUrl: 'https://www.pond-checkuree.com'));
     dio.interceptors.add(LogInterceptor(
       requestBody: true,
       responseBody: true,

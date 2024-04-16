@@ -1,9 +1,8 @@
-import 'package:checkuuree/model/attendance_check_response.dart' as check_response;
+import 'package:checkuuree/model/attendees_list_response.dart' as attendees_list_response;
 import 'package:checkuuree/view/attendee_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
-import '../view_model/attendance_check_view_model.dart';
+import '../view_model/attendees_list_view_model.dart';
 
 class AttendanceCheckScreen extends StatefulWidget {
   //이전 화면에서 전달받은 데이터
@@ -17,8 +16,8 @@ class AttendanceCheckScreen extends StatefulWidget {
 
 class _AttendanceCheckScreenState extends State<AttendanceCheckScreen> {
   final _formKey = GlobalKey<FormState>();
-  final AttendanceCheckViewModel _viewModel = AttendanceCheckViewModel();
-  late List<check_response.Items> data = [];
+  final AttendeesListViewModel _viewModel = AttendeesListViewModel();
+  late List<attendees_list_response.Items> data = [];
   bool _showBottomSheet = true;
   bool _showSave = false;
   DateTime currentDate = DateTime.now();
@@ -86,7 +85,9 @@ class _AttendanceCheckScreenState extends State<AttendanceCheckScreen> {
                             Icons.how_to_reg,
                             color: Colors.white,
                           ),
-                          onPressed: () {},
+                          onPressed: () {
+                            setState(() {});
+                          },
                         ),
                         const Text(
                           "출석 체크",
@@ -123,10 +124,12 @@ class _AttendanceCheckScreenState extends State<AttendanceCheckScreen> {
                             color: Colors.white,
                           ),
                           onPressed: () {
-                            Navigator.push(
+                            Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const AttendeeListScreen(),
+                                builder: (context) => AttendeeListScreen(
+                                  attendanceId: widget.attendanceId,
+                                ),
                               ),
                             );
                           },
@@ -226,7 +229,7 @@ class _AttendanceCheckScreenState extends State<AttendanceCheckScreen> {
   }
 
   Future<bool> _attendeesListGet(BuildContext context) async {
-    check_response.AttendanceCheckResponse response = await _viewModel.attendeesListGet(widget.attendanceId);
+    attendees_list_response.AttendeesListResponse response = await _viewModel.attendeesListGet(widget.attendanceId);
     if (response.success) {
       data = response.items!;
     }
@@ -469,7 +472,9 @@ class _AttendanceCheckScreenState extends State<AttendanceCheckScreen> {
                                                                       : Colors.transparent,
                                                                   borderRadius: BorderRadius.circular(21.0),
                                                                   border: Border.all(
-                                                                    color: (attendanceStates[index]?[stateKey] == true) ? Colors.black : Colors.grey,
+                                                                    color: (attendanceStates[index]?[stateKey] == true)
+                                                                        ? Colors.black
+                                                                        : Colors.grey,
                                                                   ),
                                                                 ),
                                                                 child: Text(
@@ -479,7 +484,9 @@ class _AttendanceCheckScreenState extends State<AttendanceCheckScreen> {
                                                                     '결석',
                                                                   ][statusIndex],
                                                                   style: TextStyle(
-                                                                    color: (attendanceStates[index]?[stateKey] == true) ? Colors.white : Colors.black,
+                                                                    color: (attendanceStates[index]?[stateKey] == true)
+                                                                        ? Colors.white
+                                                                        : Colors.black,
                                                                   ),
                                                                 ),
                                                               ),
@@ -495,7 +502,8 @@ class _AttendanceCheckScreenState extends State<AttendanceCheckScreen> {
                                           ),
                                         ),
                                       ),
-                                      if (_isFormItemVisible[index] == true && attendanceStates[index]?.values.any((value) => value) == true)
+                                      if (_isFormItemVisible[index] == true &&
+                                          attendanceStates[index]?.values.any((value) => value) == true)
                                         Padding(
                                           padding: const EdgeInsets.symmetric(vertical: 4.0),
                                           child: Container(
@@ -551,8 +559,9 @@ class _AttendanceCheckScreenState extends State<AttendanceCheckScreen> {
                                                                       vertical: 0.0,
                                                                     ),
                                                                     decoration: BoxDecoration(
-                                                                      color:
-                                                                          (tardyStates[index]?[stateKey] == true) ? Colors.black : Colors.transparent,
+                                                                      color: (tardyStates[index]?[stateKey] == true)
+                                                                          ? Colors.black
+                                                                          : Colors.transparent,
                                                                       borderRadius: BorderRadius.circular(21.0),
                                                                       border: Border.all(
                                                                         color: (tardyStates[index]?[stateKey] == true)
@@ -569,7 +578,9 @@ class _AttendanceCheckScreenState extends State<AttendanceCheckScreen> {
                                                                       ][statusIndex],
                                                                       style: TextStyle(
                                                                         fontSize: 12,
-                                                                        color: (tardyStates[index]?[stateKey] == true) ? Colors.white : Colors.black,
+                                                                        color: (tardyStates[index]?[stateKey] == true)
+                                                                            ? Colors.white
+                                                                            : Colors.black,
                                                                       ),
                                                                     ),
                                                                   ),

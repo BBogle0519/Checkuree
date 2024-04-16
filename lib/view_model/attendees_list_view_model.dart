@@ -1,23 +1,22 @@
-import 'package:checkuuree/model/attendance_check_response.dart';
+import 'package:checkuuree/model/attendees_list_response.dart';
 import 'package:dio/dio.dart';
-
 import '../service/api_service.dart';
 
-class AttendanceCheckViewModel {
+class AttendeesListViewModel {
   final Dio dio = Dio();
 
-  Future<AttendanceCheckResponse> attendeesListGet(String attendanceId) async {
+  Future<AttendeesListResponse> attendeesListGet(String attendanceId) async {
     try {
       Response response = await ApiService.dio.get(
         '/attendees/attendanceId/$attendanceId',
       );
-      return AttendanceCheckResponse.fromJson(response.data);
+      return AttendeesListResponse.fromJson(response.data);
     } on DioException catch (e) {
       // print(e);
       final response = e.response;
       if (response != null) {
         print(response.data);
-        return AttendanceCheckResponse.fromJson(response.data);
+        return AttendeesListResponse.fromJson(response.data);
       } else {
         print(e.requestOptions);
         print(e.message);
