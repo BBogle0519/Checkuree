@@ -1,14 +1,15 @@
 import 'package:checkuuree/view/attendance_check_screen.dart';
-import 'package:checkuuree/model/attendees_list_response.dart' as attendees_list_response;
+import 'package:checkuuree/model/attendance_list_response.dart' as attendance_list_response;
+import 'package:checkuuree/model/attendee_list_response.dart' as attendees_list_response;
 import 'package:checkuuree/view/attendee_add_screen.dart';
 import 'package:flutter/material.dart';
-import '../view_model/attendees_list_view_model.dart';
+import '../view_model/attendee_list_view_model.dart';
 
 class AttendeeListScreen extends StatefulWidget {
   //이전 화면에서 전달받은 데이터
-  final String attendanceId;
+  final attendance_list_response.Items attendanceData;
 
-  const AttendeeListScreen({super.key, required this.attendanceId});
+  const AttendeeListScreen({super.key, required this.attendanceData});
 
   @override
   State<AttendeeListScreen> createState() => _AttendeeListScreenState();
@@ -18,8 +19,78 @@ class _AttendeeListScreenState extends State<AttendeeListScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _showBottomSheet = true;
   bool _floatingButton = true;
-  final AttendeesListViewModel _viewModel = AttendeesListViewModel();
+  final AttendeeListViewModel _viewModel = AttendeeListViewModel();
   late List<attendees_list_response.Items> data = [];
+
+  final Map<String, String> dayMappings = {
+    'MONDAY': '월',
+    'TUESDAY': '화',
+    'WEDNESDAY': '수',
+    'THURSDAY': '목',
+    'FRIDAY': '금',
+    'SATURDAY': '토',
+    'SUNDAY': '일'
+  };
+  final Map<int, String> intToDayMappings = {
+    1: 'MONDAY',
+    2: 'TUESDAY',
+    3: 'WEDNESDAY',
+    4: 'THURSDAY',
+    5: 'FRIDAY',
+    6: 'SATURDAY',
+    7: 'SUNDAY'
+  };
+
+  final Map<String, int> dayIntMaps = {'월': 1, '화': 2, '수': 3, '목': 4, '금': 5, '토': 6, '일': 7};
+
+  List<String> getDaysListFromSchedules(int index) {
+    if (index < data.length && data[index].schedules != null) {
+      // print(data[index].schedules!.map((schedule) => schedule.day ?? '').toSet().toList());
+      return data[index].schedules!.map((schedule) => schedule.day ?? '').toSet().toList();
+    }
+    return [];
+  }
+
+  List<String> getSelectedDays(int index) {
+    // data[index].schedules?[index].day
+    List<String> selectedDays = [];
+    List<String> daysList = getDaysListFromSchedules(index);
+    for (String day in daysList) {
+      String koreanDay = dayMappings[day] ?? "null";
+      selectedDays.add(koreanDay);
+    }
+    return selectedDays;
+  }
+
+  // '${data[index].schedules?[index].day}',
+  // 한국어 요일명을 숫자 리스트로 변환
+  List<int> convertDaysToIntList(List<String> days) {
+    return days.map((day) => dayIntMaps[day]).where((element) => element != null).cast<int>().toList();
+  }
+
+  String formatDays(List<int> sortedDays) {
+    if (sortedDays.isEmpty) return '';
+    sortedDays.sort();
+    List<String> dayNames = sortedDays.map((day) => intToDayMappings[day]!).toList();
+
+    List<String> formattedDays = [];
+    int start = 0; // 연속된 요일의 시작 인덱스
+    for (int i = 0; i < dayNames.length; i++) {
+      // 다음 요일이 현재 요일의 바로 다음 요일이 아니거나, 리스트의 끝에 도달한 경우
+      if (i == dayNames.length - 1 || dayIntMaps[dayMappings[dayNames[i + 1]]!]! != dayIntMaps[dayMappings[dayNames[i]]!]! + 1) {
+        // 현재 요일이 시작 요일과 같은 경우 (단일 요일)
+        if (i == start) {
+          formattedDays.add(dayMappings[dayNames[i]]!);
+        } else {
+          // 현재 요일이 시작 요일과 다른 경우 (연속된 요일)
+          formattedDays.add("${dayMappings[dayNames[start]]!}-${dayMappings[dayNames[i]]!}");
+        }
+        start = i + 1; // 다음 연속된 요일의 시작 인덱스를 업데이트
+      }
+    }
+
+    return formattedDays.join(", ");
+  }
 
   @override
   void initState() {
@@ -35,7 +106,7 @@ class _AttendeeListScreenState extends State<AttendeeListScreen> {
   }
 
   Future<bool> _attendeesListGet(BuildContext context) async {
-    attendees_list_response.AttendeesListResponse response = await _viewModel.attendeesListGet(widget.attendanceId);
+    attendees_list_response.AttendeeListResponse response = await _viewModel.attendeeListGet(widget.attendanceData.attendanceId);
     if (response.success) {
       data = response.items!;
     }
@@ -65,8 +136,12 @@ class _AttendeeListScreenState extends State<AttendeeListScreen> {
                     onPressed: () {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => AttendanceCheckScreen(attendanceId: widget.attendanceId),
+                        PageRouteBuilder(
+                          pageBuilder: (context, animation1, animation2) => AttendanceCheckScreen(
+                            attendanceData: widget.attendanceData,
+                          ),
+                          transitionDuration: Duration.zero,
+                          reverseTransitionDuration: Duration.zero,
                         ),
                       );
                     },
@@ -222,12 +297,30 @@ class _AttendeeListScreenState extends State<AttendeeListScreen> {
                                 } else {
                                   return InkWell(
                                     onTap: () {
-                                      // Navigator.push(
-                                      //   context,
-                                      //   MaterialPageRoute(
-                                      //     builder: (context) => AttendanceCheckScreen(attendanceId: data[index].attendanceId),
-                                      //   ),
-                                      // );
+                                      showModalBottomSheet(
+                                        context: context,
+                                        isScrollControlled: true,
+                                        builder: (BuildContext context) {
+                                          return FractionallySizedBox(
+                                            heightFactor: 0.9, // 모달의 높이를 화면 높이의 90%로 설정
+                                            child: ClipRRect(
+                                              borderRadius: const BorderRadius.only(
+                                                topLeft: Radius.circular(20),
+                                                topRight: Radius.circular(20),
+                                              ),
+                                              child: AttendeeAddScreen(
+                                                attendanceData: widget.attendanceData,
+                                                attendeeData: data[index],
+                                                modifyVisible: true,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ).then((value) {
+                                        if (value == true) {
+                                          _loadAttendeesList();
+                                        }
+                                      });
                                     },
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
@@ -238,54 +331,52 @@ class _AttendeeListScreenState extends State<AttendeeListScreen> {
                                         ),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
-                                      child: Expanded(
-                                        child: Card(
-                                          elevation: 0,
-                                          color: Colors.transparent,
-                                          clipBehavior: Clip.antiAlias,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(8),
-                                          ),
-                                          child: Expanded(
-                                            child: Column(
-                                              // mainAxisSize: MainAxisSize.min,
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                Expanded(
-                                                  child: Text(
-                                                    '${data[index].name} ',
-                                                    style: const TextStyle(
-                                                      fontSize: 16,
-                                                      fontWeight: FontWeight.bold,
+                                      child: Card(
+                                        elevation: 0,
+                                        color: Colors.transparent,
+                                        clipBehavior: Clip.antiAlias,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Column(
+                                          // mainAxisSize: MainAxisSize.min,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                '${data[index].name} ',
+                                                style: const TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ),
+                                            Expanded(
+                                              child: Row(
+                                                mainAxisAlignment: MainAxisAlignment.start,
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  Expanded(
+                                                    child: Text(
+                                                      // formatDays(convertDaysToIntList(getSelectedDays())),
+                                                      // '${data[index].schedules?[index].day}',
+                                                      formatDays(convertDaysToIntList(getSelectedDays(index))),
+                                                      style: const TextStyle(
+                                                        fontSize: 14,
+                                                        color: Color(0xFF797979),
+                                                      ),
                                                     ),
                                                   ),
-                                                ),
-                                                const Expanded(
-                                                  child: Row(
-                                                    mainAxisAlignment: MainAxisAlignment.start,
-                                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                                    children: [
-                                                      Expanded(
-                                                        child: Text(
-                                                          "요일",
-                                                          style: TextStyle(
-                                                            fontSize: 14,
-                                                            color: Color(0xFF797979),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      Icon(Icons.mood),
-                                                      // Text("$presentCount"),
-                                                      Icon(Icons.access_time),
-                                                      // Text("$tardyCount"),
-                                                      Icon(Icons.cancel_outlined),
-                                                      // Text("$absentCount"),
-                                                    ],
-                                                  ),
-                                                )
-                                              ],
-                                            ),
-                                          ),
+                                                  const Icon(Icons.mood),
+                                                  // Text("$presentCount"),
+                                                  const Icon(Icons.access_time),
+                                                  // Text("$tardyCount"),
+                                                  const Icon(Icons.cancel_outlined),
+                                                  // Text("$absentCount"),
+                                                ],
+                                              ),
+                                            )
+                                          ],
                                         ),
                                       ),
                                     ),
@@ -319,7 +410,8 @@ class _AttendeeListScreenState extends State<AttendeeListScreen> {
                               topRight: Radius.circular(20),
                             ),
                             child: AttendeeAddScreen(
-                              attendanceId: widget.attendanceId,
+                              attendanceData: widget.attendanceData,
+                              modifyVisible: false,
                             ),
                           ),
                         );

@@ -1,16 +1,16 @@
-class AttendeeAddResponse {
+class ScheduleAddResponse {
   String? message;
   Data? data;
   bool success;
 
-  AttendeeAddResponse({
+  ScheduleAddResponse({
     this.message,
     this.data,
     required this.success,
   });
 
-  factory AttendeeAddResponse.fromJson(Map<String, dynamic> json) {
-    return AttendeeAddResponse(
+  factory ScheduleAddResponse.fromJson(Map<String, dynamic> json) {
+    return ScheduleAddResponse(
       message: (json['count'] as String?) ?? "",
       data: Data.fromJson(json['data']),
       success: json['success'] as bool,
@@ -19,15 +19,15 @@ class AttendeeAddResponse {
 }
 
 class Data {
-  String id;
+  List<int>? ids;
 
   Data({
-    required this.id,
+    required this.ids,
   });
 
   factory Data.fromJson(Map<String, dynamic> json) {
     return Data(
-      id: json['id'] as String,
+      ids: json['ids'].cast<int>(),
     );
   }
 }

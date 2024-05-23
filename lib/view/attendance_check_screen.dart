@@ -1,14 +1,20 @@
-import 'package:checkuuree/model/attendees_list_response.dart' as attendees_list_response;
+import 'package:checkuuree/model/attendee_list_response.dart' as attendees_list_response;
+import 'package:checkuuree/model/attendance_list_response.dart' as attendance_list_response;
 import 'package:checkuuree/view/attendee_list_screen.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
-import '../view_model/attendees_list_view_model.dart';
+import '../view_model/attendee_list_view_model.dart';
 
 class AttendanceCheckScreen extends StatefulWidget {
   //이전 화면에서 전달받은 데이터
-  final String attendanceId;
+  final attendance_list_response.Items attendanceData;
 
-  const AttendanceCheckScreen({super.key, required this.attendanceId});
+  const AttendanceCheckScreen({
+    super.key,
+    required this.attendanceData,
+  });
 
   @override
   State<AttendanceCheckScreen> createState() => _AttendanceCheckScreenState();
@@ -16,7 +22,7 @@ class AttendanceCheckScreen extends StatefulWidget {
 
 class _AttendanceCheckScreenState extends State<AttendanceCheckScreen> {
   final _formKey = GlobalKey<FormState>();
-  final AttendeesListViewModel _viewModel = AttendeesListViewModel();
+  final AttendeeListViewModel _viewModel = AttendeeListViewModel();
   late List<attendees_list_response.Items> data = [];
   bool _showBottomSheet = true;
   bool _showSave = false;
@@ -49,18 +55,41 @@ class _AttendanceCheckScreenState extends State<AttendanceCheckScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                ElevatedButton(
-                  onPressed: () {},
-                  child: const Text(
-                    "취소",
-                    style: TextStyle(fontSize: 16, color: Colors.black),
+                Expanded(
+                  flex: 3,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFFFFFF),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      padding: const EdgeInsets.all(16), // 내부 패딩
+                    ),
+                    onPressed: () {},
+                    child: const Text(
+                      "취소",
+                      style: TextStyle(fontSize: 16, color: Color(0xFF59996B), fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ),
-                ElevatedButton(
-                  onPressed: () {},
-                  child: const Text(
-                    "확인",
-                    style: TextStyle(fontSize: 16, color: Colors.black),
+                const SizedBox(width: 10),
+                Expanded(
+                  flex: 5,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF59996B),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      padding: const EdgeInsets.all(16), // 내부 패딩
+                    ),
+                    onPressed: () {},
+                    child: const Text(
+                      "저장",
+                      style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ),
               ],
@@ -126,10 +155,10 @@ class _AttendanceCheckScreenState extends State<AttendanceCheckScreen> {
                           onPressed: () {
                             Navigator.pushReplacement(
                               context,
-                              MaterialPageRoute(
-                                builder: (context) => AttendeeListScreen(
-                                  attendanceId: widget.attendanceId,
-                                ),
+                              PageRouteBuilder(
+                                pageBuilder: (context, animation1, animation2) => AttendeeListScreen(attendanceData: widget.attendanceData),
+                                transitionDuration: Duration.zero,
+                                reverseTransitionDuration: Duration.zero,
                               ),
                             );
                           },
@@ -209,8 +238,8 @@ class _AttendanceCheckScreenState extends State<AttendanceCheckScreen> {
       // 변경된 상태를 statesMap에 반영
       statesMap[index] = currentStates;
       // 로깅을 통해 상태 변경 확인
-      print("toggleItemSelection 호출됨: index=$index, stateKey=$stateKey, \n states=${statesMap[index]}");
-      print("");
+      print("index=$index, stateKey=$stateKey, \n states=${statesMap[index]}");
+      // print("");
 
       if (statesMap[index]!.values.any((value) => value == true)) {
         _showSave = true;
@@ -229,7 +258,7 @@ class _AttendanceCheckScreenState extends State<AttendanceCheckScreen> {
   }
 
   Future<bool> _attendeesListGet(BuildContext context) async {
-    attendees_list_response.AttendeesListResponse response = await _viewModel.attendeesListGet(widget.attendanceId);
+    attendees_list_response.AttendeeListResponse response = await _viewModel.attendeeListGet(widget.attendanceData.attendanceId);
     if (response.success) {
       data = response.items!;
     }
@@ -253,9 +282,7 @@ class _AttendanceCheckScreenState extends State<AttendanceCheckScreen> {
     String weekday = DateFormat('EE', 'ko').format(currentDate);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("출석부 목록(메인)"),
-      ),
+      appBar: AppBar(),
       body: NotificationListener<ScrollNotification>(
         onNotification: (scrollNotification) {
           if (scrollNotification is ScrollStartNotification) {
@@ -407,98 +434,96 @@ class _AttendanceCheckScreenState extends State<AttendanceCheckScreen> {
                                                       ? const Color(0xFFE9B3B3)
                                                       : Colors.white,
                                         ),
-                                        child: Expanded(
-                                          child: Padding(
-                                            padding: const EdgeInsets.symmetric(horizontal: 8),
-                                            child: Row(
-                                              mainAxisAlignment: MainAxisAlignment.start,
-                                              crossAxisAlignment: CrossAxisAlignment.center,
-                                              children: [
-                                                Text(
-                                                  '${data[index].name} ',
-                                                  style: const TextStyle(fontSize: 16),
-                                                ),
-                                                InkWell(
-                                                  onTap: () {
-                                                    setState(() {
-                                                      final currentItemVisibility = _isFormItemVisible[index] ?? false;
-                                                      _isFormItemVisible[index] = !currentItemVisibility;
-                                                    });
-                                                  },
-                                                  child: Container(
-                                                    padding: EdgeInsets.zero,
-                                                    width: 20.0,
-                                                    height: 20.0,
-                                                    child: const Icon(
-                                                      size: 20,
-                                                      Icons.arrow_drop_down_circle,
-                                                    ),
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.start,
+                                            crossAxisAlignment: CrossAxisAlignment.center,
+                                            children: [
+                                              Text(
+                                                '${data[index].name} ',
+                                                style: const TextStyle(fontSize: 16),
+                                              ),
+                                              InkWell(
+                                                onTap: () {
+                                                  setState(() {
+                                                    final currentItemVisibility = _isFormItemVisible[index] ?? false;
+                                                    _isFormItemVisible[index] = !currentItemVisibility;
+                                                  });
+                                                },
+                                                child: Container(
+                                                  padding: EdgeInsets.zero,
+                                                  width: 20.0,
+                                                  height: 20.0,
+                                                  child: const Icon(
+                                                    size: 20,
+                                                    Icons.arrow_drop_down_circle,
                                                   ),
                                                 ),
-                                                Flexible(
-                                                  child: Row(
-                                                    mainAxisAlignment: MainAxisAlignment.end,
-                                                    crossAxisAlignment: CrossAxisAlignment.center,
-                                                    children: List.generate(
-                                                      3,
-                                                      (statusIndex) {
-                                                        String stateKey;
-                                                        switch (statusIndex) {
-                                                          case 0:
-                                                            stateKey = 'selectedAttendance';
-                                                            break;
-                                                          case 1:
-                                                            stateKey = 'selectedTardy';
-                                                            break;
-                                                          case 2:
-                                                            stateKey = 'selectedAbsent';
-                                                            break;
-                                                          default:
-                                                            stateKey = 'null';
-                                                        }
-                                                        return Flexible(
-                                                          child: Padding(
-                                                            padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                                                            child: InkWell(
-                                                              onTap: () => toggleItemSelection(attendanceStates, index, stateKey),
-                                                              child: Container(
-                                                                padding: const EdgeInsets.symmetric(
-                                                                  horizontal: 10.0,
-                                                                  vertical: 4.0,
-                                                                ),
-                                                                decoration: BoxDecoration(
+                                              ),
+                                              Flexible(
+                                                child: Row(
+                                                  mainAxisAlignment: MainAxisAlignment.end,
+                                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                                  children: List.generate(
+                                                    3,
+                                                    (statusIndex) {
+                                                      String stateKey;
+                                                      switch (statusIndex) {
+                                                        case 0:
+                                                          stateKey = 'selectedAttendance';
+                                                          break;
+                                                        case 1:
+                                                          stateKey = 'selectedTardy';
+                                                          break;
+                                                        case 2:
+                                                          stateKey = 'selectedAbsent';
+                                                          break;
+                                                        default:
+                                                          stateKey = 'null';
+                                                      }
+                                                      return Flexible(
+                                                        child: Padding(
+                                                          padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                                                          child: InkWell(
+                                                            onTap: () => toggleItemSelection(attendanceStates, index, stateKey),
+                                                            child: Container(
+                                                              padding: const EdgeInsets.symmetric(
+                                                                horizontal: 10.0,
+                                                                vertical: 4.0,
+                                                              ),
+                                                              decoration: BoxDecoration(
+                                                                color: (attendanceStates[index]?[stateKey] == true)
+                                                                    ? Colors.black
+                                                                    : Colors.transparent,
+                                                                borderRadius: BorderRadius.circular(21.0),
+                                                                border: Border.all(
                                                                   color: (attendanceStates[index]?[stateKey] == true)
                                                                       ? Colors.black
-                                                                      : Colors.transparent,
-                                                                  borderRadius: BorderRadius.circular(21.0),
-                                                                  border: Border.all(
-                                                                    color: (attendanceStates[index]?[stateKey] == true)
-                                                                        ? Colors.black
-                                                                        : Colors.grey,
-                                                                  ),
+                                                                      : Colors.grey,
                                                                 ),
-                                                                child: Text(
-                                                                  [
-                                                                    '출석',
-                                                                    '지각',
-                                                                    '결석',
-                                                                  ][statusIndex],
-                                                                  style: TextStyle(
-                                                                    color: (attendanceStates[index]?[stateKey] == true)
-                                                                        ? Colors.white
-                                                                        : Colors.black,
-                                                                  ),
+                                                              ),
+                                                              child: Text(
+                                                                [
+                                                                  '출석',
+                                                                  '지각',
+                                                                  '결석',
+                                                                ][statusIndex],
+                                                                style: TextStyle(
+                                                                  color: (attendanceStates[index]?[stateKey] == true)
+                                                                      ? Colors.white
+                                                                      : Colors.black,
                                                                 ),
                                                               ),
                                                             ),
                                                           ),
-                                                        );
-                                                      },
-                                                    ),
+                                                        ),
+                                                      );
+                                                    },
                                                   ),
                                                 ),
-                                              ],
-                                            ),
+                                              ),
+                                            ],
                                           ),
                                         ),
                                       ),

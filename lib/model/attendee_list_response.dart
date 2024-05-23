@@ -1,16 +1,16 @@
-class AttendeesListResponse {
+class AttendeeListResponse {
   int? count;
   List<Items>? items;
   bool success;
 
-  AttendeesListResponse({
+  AttendeeListResponse({
     this.count,
     this.items,
     required this.success,
   });
 
-  factory AttendeesListResponse.fromJson(Map<String, dynamic> json) {
-    return AttendeesListResponse(
+  factory AttendeeListResponse.fromJson(Map<String, dynamic> json) {
+    return AttendeeListResponse(
       count: (json['count'] as int?) ?? 0,
       items: (json['items'] as List<dynamic>?)?.map((itemJson) => Items.fromJson(itemJson)).toList() ?? [],
       success: json['success'] as bool,
@@ -19,48 +19,68 @@ class AttendeesListResponse {
 }
 
 class Items {
-  String createId;
   String createdAt;
-  String? updateId;
-  String updatedAt;
-  String? deletedAt;
   String id;
   String attendanceId;
   String name;
+  String gender;
   String mobileNumber;
   String subMobileNumber;
-  int age;
-  String description;
+  String? birth;
+  String? course;
+  String? grade;
+  String? description;
+  List<Schedules>? schedules;
 
   Items({
-    required this.createId,
     required this.createdAt,
-    this.updateId,
-    required this.updatedAt,
-    this.deletedAt,
     required this.id,
     required this.attendanceId,
     required this.name,
+    required this.gender,
     required this.mobileNumber,
     required this.subMobileNumber,
-    required this.age,
-    required this.description,
+    this.birth,
+    this.course,
+    this.grade,
+    this.description,
+    this.schedules,
   });
 
   factory Items.fromJson(Map<String, dynamic> json) {
     return Items(
-      createId: json['createId'],
       createdAt: json['createdAt'],
-      updateId: json['updateId'],
-      updatedAt: json['updatedAt'],
-      deletedAt: json['deletedAt'],
       id: json['id'],
       attendanceId: json['attendanceId'],
       name: json['name'],
+      gender: json['gender'],
       mobileNumber: json['mobileNumber'],
       subMobileNumber: json['subMobileNumber'],
-      age: json['age'],
+      birth: json['birth'],
+      course: json['course'],
+      grade: json['grade'],
       description: json['description'],
+      schedules: (json['schedules'] as List<dynamic>?)?.map((schedulesJson) => Schedules.fromJson(schedulesJson)).toList() ?? [],
+    );
+  }
+}
+
+class Schedules {
+  int? id;
+  String? day;
+  String? time;
+
+  Schedules({
+    this.id,
+    this.day,
+    this.time,
+  });
+
+  factory Schedules.fromJson(Map<String, dynamic> json) {
+    return Schedules(
+      id: json['id'],
+      day: json['day'],
+      time: json['time'],
     );
   }
 }

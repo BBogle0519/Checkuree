@@ -11,7 +11,7 @@ class ApiService {
   static Function? onTokenRefreshFailed;
 
   static Dio _initializeDio() {
-    Dio dio = Dio(BaseOptions(baseUrl: 'https://www.pond-checkuree.com'));
+    Dio dio = Dio(BaseOptions(baseUrl: 'https://checkuree.com/api/v1'));
     dio.interceptors.add(LogInterceptor(
       requestBody: true,
       responseBody: true,

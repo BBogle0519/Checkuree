@@ -1,10 +1,8 @@
-import 'package:checkuuree/model/attendance_list_response.dart' as list_response;
+import 'package:checkuuree/model/attendance_list_response.dart' as attendance_list_response;
 import 'package:checkuuree/view/attendance_add_screen.dart';
 import 'package:checkuuree/view/attendance_check_screen.dart';
 import 'package:checkuuree/view_model/attendance_list_view_model.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 
 class AttendanceListScreen extends StatefulWidget {
@@ -17,7 +15,7 @@ class AttendanceListScreen extends StatefulWidget {
 class _AttendanceListScreenState extends State<AttendanceListScreen> {
   final _formKey = GlobalKey<FormState>();
   final AttendanceListViewModel _viewModel = AttendanceListViewModel();
-  List<list_response.Items> data = [];
+  List<attendance_list_response.Items> data = [];
   final DateTime now = DateTime.now();
   late final String formattedDate;
   late final String date;
@@ -31,7 +29,15 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
     'SATURDAY': '토',
     'SUNDAY': '일'
   };
-  final Map<int, String> intToDayMappings = {1: 'MONDAY', 2: 'TUESDAY', 3: 'WEDNESDAY', 4: 'THURSDAY', 5: 'FRIDAY', 6: 'SATURDAY', 7: 'SUNDAY'};
+  final Map<int, String> intToDayMappings = {
+    1: 'MONDAY',
+    2: 'TUESDAY',
+    3: 'WEDNESDAY',
+    4: 'THURSDAY',
+    5: 'FRIDAY',
+    6: 'SATURDAY',
+    7: 'SUNDAY'
+  };
   final Map<String, int> dayIntMaps = {'월': 1, '화': 2, '수': 3, '목': 4, '금': 5, '토': 6, '일': 7};
 
   @override
@@ -51,7 +57,7 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
   }
 
   Future<bool> _attendanceListGet(BuildContext context) async {
-    list_response.AttendanceListResponse response = await _viewModel.attendanceListGet();
+    attendance_list_response.AttendanceListResponse response = await _viewModel.attendanceListGet();
     if (response.success) {
       data = response.items!;
     }
@@ -131,67 +137,68 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => AttendanceCheckScreen(attendanceId: data[index].attendanceId),
+                                  builder: (context) => AttendanceCheckScreen(
+                                    attendanceData: data[index],
+                                  ),
                                 ),
                               );
                             },
-                            child: Flexible(
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                    color: const Color(0xFF59996B),
-                                    width: 1.0,
-                                  ),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: const Color(0xFF59996B),
+                                  width: 1.0,
+                                ),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Card(
+                                clipBehavior: Clip.antiAlias,
+                                shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
-                                child: Card(
-                                  clipBehavior: Clip.antiAlias,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Expanded(
-                                        child: Image.network(
-                                          'https://play-lh.googleusercontent.com/ADg24o30zrA8aN9PpFBVrgFX2G7A8mgf3tLIcGjpihXlg0NonhtjiowXmpSzB0v8F60=w480-h960-rw',
-                                          fit: BoxFit.cover,
-                                        ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(
+                                      child: Image.network(
+                                        data[index].attendance.imageUrl ??
+                                            "https://play-lh.googleusercontent.com/ADg24o30zrA8aN9PpFBVrgFX2G7A8mgf3tLIcGjpihXlg0NonhtjiowXmpSzB0v8F60=w480-h960-rw",
+                                        fit: BoxFit.cover,
                                       ),
-                                      Text(
-                                        data[index].attendance.title,
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                    ),
+                                    Text(
+                                      data[index].attendance.title,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
                                       ),
-                                      const SizedBox(height: 10),
-                                      Text(
-                                        data[index].attendance.description,
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                          color: Color(0xFF797979),
-                                        ),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    Text(
+                                      data[index].attendance.description ?? "",
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        color: Color(0xFF797979),
                                       ),
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.start,
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Expanded(
-                                            child: Text(
-                                              formatDays(convertDaysToIntList(getSelectedDays(index))),
-                                              // convertDaysToIntList(getSelectedDays(index)).toString(),
-                                              // getSelectedDays(index).toString(),
-                                              style: const TextStyle(
-                                                fontSize: 14,
-                                                color: Color(0xFF797979),
-                                              ),
+                                    ),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.start,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            formatDays(convertDaysToIntList(getSelectedDays(index))),
+                                            // convertDaysToIntList(getSelectedDays(index)).toString(),
+                                            // getSelectedDays(index).toString(),
+                                            style: const TextStyle(
+                                              fontSize: 14,
+                                              color: Color(0xFF797979),
                                             ),
                                           ),
-                                        ],
-                                      )
-                                    ],
-                                  ),
+                                        ),
+                                      ],
+                                    )
+                                  ],
                                 ),
                               ),
                             ),
